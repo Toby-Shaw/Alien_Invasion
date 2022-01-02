@@ -61,7 +61,7 @@ class AlienInvasion:
         self.sb.prep_level()
         self.sb.prep_ships()
 
-        #Get rid of any remaining aliens and bullets.
+        # Get rid of any remaining aliens and bullets.
         self.aliens.empty()
         self.bullets.empty()
 
@@ -150,19 +150,22 @@ class AlienInvasion:
             self.sb.check_high_score()
 
         if not self.aliens:
-            # Destroy existing bullets and create new fleet.
-            self.bullets.empty()
-            self._create_fleet()
-            self.settings.increase_speed()
+            self._new_level()
 
-            # Increase level
-            self.stats.level += 1
-            self.sb.prep_level()
+    def _new_level(self):
+        """ Destroy existing bullets and create new fleet. """
+        self.bullets.empty()
+        self._create_fleet()
+        self.settings.increase_speed()
+
+        # Increase level
+        self.stats.level += 1
+        self.sb.prep_level()
 
     def _ship_hit(self):
         """Respond to the ship being hit by alien"""
         if self.stats.ships_left > 0:
-            #Decrement ships left, and update graphics.
+            # Decrement ships left, and update graphics.
             self.stats.ships_left -= 1
             self.sb.prep_ships()
 
@@ -213,7 +216,7 @@ class AlienInvasion:
         ship_height = self.ship.rect.height
         available_space_y = (self.settings.screen_height -
                     (3 * alien_height) - ship_height)
-        number_rows = available_space_y // (2*alien_height)
+        number_rows = available_space_y // (2 * alien_height)
 
         # Create the full fleet of aliens.
         for row_number in range(number_rows):
@@ -241,7 +244,7 @@ class AlienInvasion:
         screen_rect = self.screen.get_rect()
         for alien in self.aliens.sprites():
             if alien.rect.bottom >= screen_rect.bottom:
-                #Treat it as if a ship got hit.
+                # Treat it as if a ship got hit.
                 self._ship_hit()
                 break
 
@@ -259,7 +262,7 @@ class AlienInvasion:
             bullet.draw_bullet()
         self.aliens.draw(self.screen)
 
-        #Draw the score info
+        # Draw the score info
         self.sb.show_score()
 
         # Draw the play button if the game is inactive.
