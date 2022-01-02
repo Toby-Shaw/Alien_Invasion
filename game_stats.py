@@ -7,7 +7,7 @@ class Gamestats:
         self.reset_stats()
 
         # High score never resets.
-        f = open("/home/toby/Pythonthings/Alien_Invasion/high_score.txt", "r")
+        f = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "r")
         self.high_score = int(f.read())
 
     def reset_stats(self):
