@@ -112,6 +112,7 @@ class AlienInvasion:
         elif event.key == pygame.K_s:
             if self.settings.normal_bullet and self.settings.cooldown_up:
                 self.settings.strong_bullet()
+                self.ability_square.covering = True
         elif event.key == pygame.K_q:
             if self.stats.game_active:
                 high_score = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "w")
@@ -168,6 +169,7 @@ class AlienInvasion:
                 self.settings.cooldown_start = False
                 self.settings.cooldown = 0
                 self.settings.cooldown_up = True
+                self.ability_square.covering = False
 
     
     def _check_bullet_alien_collisions(self):
@@ -192,6 +194,7 @@ class AlienInvasion:
         self.settings.cooldown_start = False
         self.settings.cooldown = 0
         self.settings.cooldown_up = True
+        self.ability_square.covering = False
 
         # Increase level
         self.stats.level += 1
@@ -216,9 +219,13 @@ class AlienInvasion:
             self._create_fleet()
             self.ship.center_ship()
 
-            # Reset strong bullet if running
+            # Reset strong bullet
             if not self.settings.normal_bullet:
                 self.settings.normal_bullet_reset()
+            self.ability_square.covering = False
+            self.settings.cooldown_start = False
+            self.settings.cooldown = 0
+            self.settings.cooldown_up = True
 
             # Slow it down marginally
             self.settings.ship_speed *= 0.9

@@ -11,7 +11,8 @@ class AbilityButton:
         self.width, self.height = 50, 50
         self.button_color = (86, 91, 203)
         self.text_color = (255, 0, 0)
-        self.font = pygame.font.SysFont(None, 36)
+        self.font = pygame.font.SysFont(None, 48)
+        self.covering = False
 
         # Build the rect object and put it a bit to the side of the score
         self.rect = pygame.Rect(0, 0, self.width, self.height)
@@ -29,5 +30,8 @@ class AbilityButton:
 
     def draw_ability_square(self):
         """Draw blank square then center the message on it"""
-        self.screen.fill(self.button_color, self.rect)
+        if not self.covering:
+            self.screen.fill(self.button_color, self.rect)
         self.screen.blit(self.msg_image, self.msg_image_rect)
+        if self.covering:
+            self.screen.fill(self.button_color, self.rect)
