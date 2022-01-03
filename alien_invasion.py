@@ -53,7 +53,8 @@ class AlienInvasion:
                 self.ship.update()
                 self._update_bullets()
                 self._update_aliens()
-
+                self._strong_bullet_timer()
+                self._strong_bullet_cooldown()
             self._update_screen()
 
     def _start_game(self):
@@ -108,6 +109,9 @@ class AlienInvasion:
             self._fire_bullet()
         elif event.key == pygame.K_p:
             self._start_game()
+        elif event.key == pygame.K_s:
+            if self.settings.normal_bullet and self.settings.cooldown_up:
+                self.settings.strong_bullet()
         elif event.key == pygame.K_q:
             if self.stats.game_active:
                 self.stats.game_active = False
@@ -141,6 +145,28 @@ class AlienInvasion:
                 self.bullets.remove(bullet)
         
         self._check_bullet_alien_collisions()
+
+    def _strong_bullet_timer(self):
+        """Tracks strong bullet time usage, resets once it passes threshold"""
+        if not self.settings.normal_bullet:
+            if self.settings.time_active < 400:
+                self.settings.time_active += 1
+            else:
+                self.settings.normal_bullet_reset()
+                self.settings.cooldown_start = True
+                self._strong_bullet_cooldown()
+
+    def _strong_bullet_cooldown(self):
+        """If strong bullet just ended, starts cooldown"""
+        if self.settings.cooldown_start == True:
+            if self.settings.cooldown < 1200:
+                self.settings.cooldown += 1
+                self.settings.cooldown_up = False
+            elif self.settings.cooldown >= 800:
+                self.settings.cooldown_start = False
+                self.settings.cooldown = 0
+                self.settings.cooldown_up = True
+
     
     def _check_bullet_alien_collisions(self):
         """Respond to bullet-alien collisions."""
@@ -166,6 +192,10 @@ class AlienInvasion:
         self.stats.level += 1
         self.sb.prep_level()
 
+        # Stop strong bullet if active
+        if self.settings.normal_bullet == False:
+            self.settings.normal_bullet_reset() 
+
     def _ship_hit(self):
         """Respond to the ship being hit by alien"""
         if self.stats.ships_left > 0:
@@ -180,6 +210,10 @@ class AlienInvasion:
             # Create a new fleet and center the ship.
             self._create_fleet()
             self.ship.center_ship()
+
+            # Reset strong bullet if running
+            if not self.normal_bullet:
+                self.settings.normal_bullet_reset()
 
             # Slow it down marginally
             self.settings.ship_speed *= 0.9

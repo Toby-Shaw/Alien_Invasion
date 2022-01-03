@@ -9,8 +9,8 @@ class AbilityButton:
 
         # Set the dimensions and color of the button
         self.width, self.height = 50, 50
-        self.button_color = (173, 216, 230)
-        self.text_color = (255, 255, 255)
+        self.button_color = (86, 91, 203)
+        self.text_color = (255, 0, 0)
         self.font = pygame.font.SysFont(None, 36)
 
         # Build the rect object and put it a bit to the side of the score

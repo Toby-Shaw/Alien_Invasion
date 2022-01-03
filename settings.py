@@ -23,6 +23,8 @@ class Settings:
         # How quickly alien point values increase
         self.score_scale = 1.5
 
+        
+
         self.initialize_dynamic_settings()
 
     def initialize_dynamic_settings(self):
@@ -34,6 +36,12 @@ class Settings:
         self.bullet_speed = 3.0
         self.alien_speed = 1.0
         self.bullet_height = 15
+
+        # Strong bullet timer
+        self.time_active = 0
+        self.cooldown_start = False
+        self.cooldown_up = True
+        self.cooldown = 0
 
         # fleet_direction of 1 represents right, -1 = left.
         self.fleet_direction = 1
@@ -52,6 +60,7 @@ class Settings:
         self.alien_points = int(self.alien_points * self.score_scale)
 
     def strong_bullet(self):
+        self.time_active = 0
         self.bullet_speed *= 2
         self.bullet_color = (255, 0, 0)
         self.bullet_width = 8
@@ -59,8 +68,9 @@ class Settings:
 
     def normal_bullet_reset(self):
         if not self.normal_bullet:
+            self.time_active = 0
             self.bullet_speed /= 2
             self.bullet_color = (60, 60, 60)
-            self.bullet_width = 8
+            self.bullet_width = 4
             self.normal_bullet = True
 
