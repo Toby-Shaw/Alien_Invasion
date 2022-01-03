@@ -10,6 +10,7 @@ from alien import Alien
 from game_stats import Gamestats
 from button import Button
 from scoreboard import Scoreboard
+from ability_square import AbilityButton
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -36,6 +37,9 @@ class AlienInvasion:
 
         # Make the Play button
         self.play_button = Button(self, "Play")
+
+        # Make the Ability "strong bullet"
+        self.ability_square = AbilityButton(self, "S")
 
         # Start Alien Invasion in an inactive state.
         self.stats.game_active = False
@@ -141,7 +145,7 @@ class AlienInvasion:
     def _check_bullet_alien_collisions(self):
         """Respond to bullet-alien collisions."""
         collisions = pygame.sprite.groupcollide(
-        self.bullets, self.aliens, True, True)
+        self.bullets, self.aliens, self.settings.normal_bullet, True)
 
         if collisions:
             for aliens in collisions.values():
@@ -262,8 +266,9 @@ class AlienInvasion:
             bullet.draw_bullet()
         self.aliens.draw(self.screen)
 
-        # Draw the score info
+        # Draw the score info and ability square
         self.sb.show_score()
+        self.ability_square.draw_ability_square()
 
         # Draw the play button if the game is inactive.
         if not self.stats.game_active:

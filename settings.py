@@ -12,9 +12,6 @@ class Settings:
         self.ship_limit = 3
 
         # Bullet settings
-        self.bullet_width = 4
-        
-        self.bullet_color = (60, 60, 60)
         self.bullets_allowed = 3
 
         # Alien settings
@@ -30,6 +27,9 @@ class Settings:
 
     def initialize_dynamic_settings(self):
         """Initialize the settings that change during the game"""
+        self.bullet_width = 4
+        self.normal_bullet = True
+        self.bullet_color = (60, 60, 60)
         self.ship_speed = 2.5
         self.bullet_speed = 3.0
         self.alien_speed = 1.0
@@ -50,4 +50,17 @@ class Settings:
         self.alien_speed *= self.speedup_scale
         
         self.alien_points = int(self.alien_points * self.score_scale)
+
+    def strong_bullet(self):
+        self.bullet_speed *= 2
+        self.bullet_color = (255, 0, 0)
+        self.bullet_width = 8
+        self.normal_bullet = False
+
+    def normal_bullet_reset(self):
+        if not self.normal_bullet:
+            self.bullet_speed /= 2
+            self.bullet_color = (60, 60, 60)
+            self.bullet_width = 8
+            self.normal_bullet = True
 
