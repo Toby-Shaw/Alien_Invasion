@@ -114,6 +114,8 @@ class AlienInvasion:
                 self.settings.strong_bullet()
         elif event.key == pygame.K_q:
             if self.stats.game_active:
+                high_score = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "w")
+                high_score.write(str(self.stats.high_score))
                 self.stats.game_active = False
                 pygame.mouse.set_visible(True)
             else:
@@ -159,7 +161,7 @@ class AlienInvasion:
     def _strong_bullet_cooldown(self):
         """If strong bullet just ended, starts cooldown"""
         if self.settings.cooldown_start == True:
-            if self.settings.cooldown < 1200:
+            if self.settings.cooldown < 1100:
                 self.settings.cooldown += 1
                 self.settings.cooldown_up = False
             elif self.settings.cooldown >= 800:
@@ -187,6 +189,9 @@ class AlienInvasion:
         self.bullets.empty()
         self._create_fleet()
         self.settings.increase_speed()
+        self.settings.cooldown_start = False
+        self.settings.cooldown = 0
+        self.settings.cooldown_up = True
 
         # Increase level
         self.stats.level += 1
@@ -212,7 +217,7 @@ class AlienInvasion:
             self.ship.center_ship()
 
             # Reset strong bullet if running
-            if not self.normal_bullet:
+            if not self.settings.normal_bullet:
                 self.settings.normal_bullet_reset()
 
             # Slow it down marginally

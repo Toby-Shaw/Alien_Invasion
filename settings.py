@@ -11,9 +11,6 @@ class Settings:
         # Ship settings
         self.ship_limit = 3
 
-        # Bullet settings
-        self.bullets_allowed = 3
-
         # Alien settings
         self.fleet_drop_speed = 10
 
@@ -36,6 +33,7 @@ class Settings:
         self.bullet_speed = 3.0
         self.alien_speed = 1.0
         self.bullet_height = 15
+        self.bullets_allowed = 4
 
         # Strong bullet timer
         self.time_active = 0
@@ -62,12 +60,14 @@ class Settings:
     def strong_bullet(self):
         self.time_active = 0
         self.bullet_speed *= 2
+        self.bullets_allowed = 2
         self.bullet_color = (255, 0, 0)
         self.bullet_width = 8
         self.normal_bullet = False
 
     def normal_bullet_reset(self):
         if not self.normal_bullet:
+            self.bullets_allowed = 4
             self.time_active = 0
             self.bullet_speed /= 2
             self.bullet_color = (60, 60, 60)
