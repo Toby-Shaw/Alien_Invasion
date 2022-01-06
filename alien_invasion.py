@@ -53,7 +53,6 @@ class AlienInvasion:
                 self.ship.update()
                 self._update_bullets()
                 self._update_aliens()
-                self._strong_bullet_timer()
                 self._strong_bullet_cooldown()
             self._update_screen()
 
@@ -134,6 +133,7 @@ class AlienInvasion:
     def _fire_bullet(self):
         """Create a new bullet and add it to the bullets group"""
         if len(self.bullets) < self.settings.bullets_allowed:
+            self._strong_bullet_timer()
             new_bullet = Bullet(self)
             self.bullets.add(new_bullet)
 
@@ -150,11 +150,11 @@ class AlienInvasion:
         self._check_bullet_alien_collisions()
 
     def _strong_bullet_timer(self):
-        """Tracks strong bullet time usage, resets once it passes threshold"""
+        """Tracks strong bullet usage, resets once it passes threshold"""
         if not self.settings.normal_bullet:
-            if self.settings.time_active < 400:
-                self.settings.time_active += 1
-            else:
+            self.settings.strong_bullets_fired += 1
+            # Checks number of strong bullets, discontinues if necessary
+            if self.settings.strong_bullets_allowed < self.settings.strong_bullets_fired:
                 self.settings.normal_bullet_reset()
                 self.settings.cooldown_start = True
                 self._strong_bullet_cooldown()
@@ -165,7 +165,7 @@ class AlienInvasion:
             if self.settings.cooldown < 1100:
                 self.settings.cooldown += 1
                 self.settings.cooldown_up = False
-            elif self.settings.cooldown >= 800:
+            elif self.settings.cooldown >= 1100:
                 self.settings.cooldown_start = False
                 self.settings.cooldown = 0
                 self.settings.cooldown_up = True
@@ -307,14 +307,15 @@ class AlienInvasion:
     def _update_screen(self):
         """Update images on the screen, and flip to the new screen."""
         self.screen.fill(self.settings.bg_color)
-        self.ship.blitme()
-        for bullet in self.bullets.sprites():
-            bullet.draw_bullet()
-        self.aliens.draw(self.screen)
+        if self.stats.game_active:
+            self.ship.blitme()
+            for bullet in self.bullets.sprites():
+                bullet.draw_bullet()
+            self.aliens.draw(self.screen)
 
-        # Draw the score info and ability square
-        self.sb.show_score()
-        self.ability_square.draw_ability_square()
+            # Draw the score info and ability square
+            self.sb.show_score()
+            self.ability_square.draw_ability_square()
 
         # Draw the play button if the game is inactive.
         if not self.stats.game_active:

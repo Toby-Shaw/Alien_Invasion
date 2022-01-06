@@ -20,7 +20,8 @@ class Settings:
         # How quickly alien point values increase
         self.score_scale = 1.5
 
-        
+        # How many strong bullets are allowed per powerup
+        self.strong_bullets_allowed = 6
 
         self.initialize_dynamic_settings()
 
@@ -36,7 +37,7 @@ class Settings:
         self.bullets_allowed = 4
 
         # Strong bullet timer
-        self.time_active = 0
+        self.strong_bullets_fired = 0
         self.cooldown_start = False
         self.cooldown_up = True
         self.cooldown = 0
@@ -58,7 +59,8 @@ class Settings:
         self.alien_points = int(self.alien_points * self.score_scale)
 
     def strong_bullet(self):
-        self.time_active = 0
+        """Begin the strong bullet powerup"""
+        self.strong_bullets_fired = 0
         self.bullet_speed *= 2
         self.bullets_allowed = 2
         self.bullet_color = (255, 0, 0)
@@ -66,9 +68,9 @@ class Settings:
         self.normal_bullet = False
 
     def normal_bullet_reset(self):
+        """Reset to normal bullet settings once the cooldown is up"""
         if not self.normal_bullet:
             self.bullets_allowed = 4
-            self.time_active = 0
             self.bullet_speed /= 2
             self.bullet_color = (60, 60, 60)
             self.bullet_width = 4
