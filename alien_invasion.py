@@ -11,6 +11,7 @@ from game_stats import Gamestats
 from button import Button
 from scoreboard import Scoreboard
 from ability_square import AbilityButton
+from text import Text
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -36,20 +37,25 @@ class AlienInvasion:
         self._create_fleet()
 
         # Make the Play button
-        self.play_button = Button(self, "Play")
+        self.play_button = Button(self, "Play", (0, 255, 0),
+             (self.settings.screen_width / 2), (self.settings.screen_height / 2))
+
+        # Make the title
+        self.title = Text(self, "Alien Invasion", 110, (0, 255, 0), 
+             (self.settings.screen_width / 2), 180)
 
         # Make the Ability "strong bullet"
         self.ability_square = AbilityButton(self, "S")
 
         # Start Alien Invasion in an inactive state.
-        self.stats.game_active = False
+        self.stats.game_layer = 'main screen'
 
     def run_game(self):
         """Start the main loop for the game."""
         while True:
             self._check_events()
 
-            if self.stats.game_active:
+            if self.stats.game_layer == 'play':
                 self.ship.update()
                 self._update_bullets()
                 self._update_aliens()
@@ -59,8 +65,9 @@ class AlienInvasion:
     def _start_game(self):
         # Reset the game statistics.
         self.stats.reset_stats()
-        self.stats.game_active = True
+        self.stats.game_layer = 'play'
         self.settings.initialize_dynamic_settings()
+        self.ability_square.covering = False
         self.sb.prep_score()
         self.sb.prep_level()
         self.sb.prep_ships()
@@ -94,7 +101,7 @@ class AlienInvasion:
     def _check_play_button(self, mouse_pos):
         """Start a new game when the player clicks Play."""
         button_clicked = self.play_button.rect.collidepoint(mouse_pos)
-        if button_clicked and not self.stats.game_active:
+        if button_clicked and self.stats.game_layer == 'main screen':
             # Reset the game settings.
             self._start_game()
 
@@ -113,10 +120,10 @@ class AlienInvasion:
                 self.settings.strong_bullet()
                 self.ability_square.covering = True
         elif event.key == pygame.K_q:
-            if self.stats.game_active:
+            if self.stats.game_layer == 'play':
                 high_score = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "w")
                 high_score.write(str(self.stats.high_score))
-                self.stats.game_active = False
+                self.stats.game_layer = 'main screen'
                 pygame.mouse.set_visible(True)
             else:
                 high_score = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "w")
@@ -235,7 +242,7 @@ class AlienInvasion:
             # Pause.
             sleep(1)
         else:
-            self.stats.game_active = False
+            self.stats.game_layer = 'main screen'
             pygame.mouse.set_visible(True)
 
     def _update_aliens(self):
@@ -307,7 +314,7 @@ class AlienInvasion:
     def _update_screen(self):
         """Update images on the screen, and flip to the new screen."""
         self.screen.fill(self.settings.bg_color)
-        if self.stats.game_active:
+        if self.stats.game_layer == 'play':
             self.ship.blitme()
             for bullet in self.bullets.sprites():
                 bullet.draw_bullet()
@@ -318,7 +325,8 @@ class AlienInvasion:
             self.ability_square.draw_ability_square()
 
         # Draw the play button if the game is inactive.
-        if not self.stats.game_active:
+        if self.stats.game_layer == 'main screen':
+            self.title.draw_text()
             self.play_button.draw_button()
         
         pygame.display.flip()
