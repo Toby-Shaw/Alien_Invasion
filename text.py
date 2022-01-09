@@ -22,4 +22,5 @@ class Text:
         self.text_image_rect.centery = self.posy
 
     def draw_text(self):
+        "Draw the text onto the screen"
         self.screen.blit(self.text_image, self.text_image_rect)
