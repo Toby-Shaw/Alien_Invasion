@@ -23,6 +23,13 @@ class Settings:
         # How many strong bullets are allowed per powerup
         self.strong_bullets_allowed = 6
 
+        # Shooter alien stuff
+        self.alien_bullet_color = (0, 255, 0)
+        self.alien_bullet_width = 4
+        self.alien_bullet_height = 15
+        self.alien_bullet_speed = 3.0
+        self.alien_bullets_allowed = 4
+
         self.initialize_dynamic_settings()
 
     def initialize_dynamic_settings(self):

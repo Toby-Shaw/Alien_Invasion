@@ -1,5 +1,6 @@
 import sys
 from time import sleep
+import random
 
 import pygame
 
@@ -12,6 +13,7 @@ from button import Button
 from scoreboard import Scoreboard
 from ability_square import AbilityButton
 from text import Text
+from alien_bullet import AlienBullet
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -33,6 +35,7 @@ class AlienInvasion:
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
+        self.alien_bullets = pygame.sprite.Group()
 
         self._create_fleet()
 
@@ -65,6 +68,7 @@ class AlienInvasion:
                 self.ship.update()
                 self._update_bullets()
                 self._update_aliens()
+                self._update_alien_bullets()
                 self._strong_bullet_cooldown()
             self._update_screen()
 
@@ -180,6 +184,16 @@ class AlienInvasion:
         
         self._check_bullet_alien_collisions()
 
+    def _update_alien_bullets(self):
+        """Update alien bullets and get rid of out of bounds ones."""
+        # Update their position
+        self.alien_bullets.update()
+
+        # If out of bounds, delete the bullet
+        for bullet in self.alien_bullets.copy():
+            if bullet.rect.top >= self.settings.screen_height:
+                self.alien_bullets.remove(bullet)
+
     def _strong_bullet_timer(self):
         """Tracks strong bullet usage, resets once it passes threshold"""
         if not self.settings.normal_bullet:
@@ -204,11 +218,17 @@ class AlienInvasion:
     
     def _check_bullet_alien_collisions(self):
         """Respond to bullet-alien collisions."""
-        collisions = pygame.sprite.groupcollide(
+        for bullet in self.bullets:
+            for alien in self.aliens:
+                check_collisions = pygame.sprite.collide_rect(
+                    bullet, alien)
+                if check_collisions:
+                    self.blacklist.append(alien)
+        self.collisions = pygame.sprite.groupcollide(
         self.bullets, self.aliens, self.settings.normal_bullet, True)
 
-        if collisions:
-            for aliens in collisions.values():
+        if self.collisions:
+            for aliens in self.collisions.values():
                 self.stats.score += self.settings.alien_points*len(aliens)
             self.sb.prep_score()
             self.sb.check_high_score()
@@ -219,6 +239,7 @@ class AlienInvasion:
     def _new_level(self):
         """ Destroy existing bullets and create new fleet. """
         self.bullets.empty()
+        self.alien_bullets.empty()
         self._create_fleet()
         self.settings.increase_speed()
         self.settings.cooldown_start = False
@@ -244,6 +265,7 @@ class AlienInvasion:
             # Get rid of any remaining aliens and bullets
             self.aliens.empty()
             self.bullets.empty()
+            self.alien_bullets.empty()
 
             # Create a new fleet and center the ship.
             self._create_fleet()
@@ -280,8 +302,51 @@ class AlienInvasion:
         if pygame.sprite.spritecollideany(self.ship, self.aliens):
             self._ship_hit()
 
+        if pygame.sprite.spritecollideany(self.ship, self.alien_bullets):
+            self._ship_hit()
+
         # Look for aliens hitting the bottom of the screen.
         self._check_aliens_bottom()
+
+        # Fire the shooter aliens if needed.
+        self._fire_shooter_aliens()
+        
+    def _fire_shooter_aliens(self):
+        """Shoot sometimes"""
+        # Runs through every shooter alien address
+        for x in self.shooter_alien_addresses:
+            # Checks number of bullets, that there is no one in front,
+            # and checks that the alien is alive.
+            if (len(self.alien_bullets) <= self.settings.alien_bullets_allowed
+                and self._check_in_front(x) and self.alien_list[x] not in self.blacklist
+                and self.time_since_shot >= 100):
+                self.time_since_shot = 0
+                new_bullet = AlienBullet(self, self.alien_list[x])
+                self.alien_bullets.add(new_bullet)
+        self.time_since_shot += 1
+
+    def _check_in_front(self, alien):
+        """Check before firing that no aliens are in front of the shooter"""
+        if alien > 26:
+            return True
+        elif alien < 27 and alien > 17:
+            if self.alien_list[alien + 9] not in self.blacklist:
+                return False
+            return True
+        elif alien < 18 and alien > 8:
+            if self.alien_list[alien + 9] not in self.blacklist:
+                return False
+            elif self.alien_list[alien + 18] not in self.blacklist:
+                return False
+            return True
+        elif alien < 9:
+            if self.alien_list[alien + 9] not in self.blacklist:
+                return False
+            elif self.alien_list[alien + 18] not in self.blacklist:
+                return False
+            elif self.alien_list[alien + 27] not in self.blacklist:
+                return False
+            return True
 
     def _create_fleet(self):
         """Create the fleet of aliens"""
@@ -290,7 +355,7 @@ class AlienInvasion:
         alien = Alien(self)
         alien_width, alien_height = alien.rect.size
         available_space_x = self.settings.screen_width - (2 * alien_width)
-        number_aliens_x = available_space_x // (2 * alien_width)
+        self.number_aliens_x = available_space_x // (2 * alien_width)
 
         # Determine the number of rows of aliens that fit on the screen.
         ship_height = self.ship.rect.height
@@ -298,10 +363,22 @@ class AlienInvasion:
                     (3 * alien_height) - ship_height)
         number_rows = available_space_y // (2 * alien_height)
 
+        # Create the list of potential shooter aliens/addresses/blacklist
+        self.shooter_aliens = []
+        self.shooter_alien_addresses = []
+        self.blacklist = []
+        self.time_since_shot = 0
+
         # Create the full fleet of aliens.
         for row_number in range(number_rows):
-            for alien_number in range(number_aliens_x):
+            for alien_number in range(self.number_aliens_x):
                 self._create_alien(alien_number, row_number)
+
+        # Convert the x, y coords of a shooter alien into a list address
+        for x in self.shooter_aliens:
+            self._convert_alien_number(x)
+            self.shooter_alien_addresses.append(self.shooter_alien_address)
+        self.alien_list = self.aliens.sprites()
 
     def _create_alien(self, alien_number, row_number):
         """Create a alien and place it in the row."""
@@ -310,7 +387,19 @@ class AlienInvasion:
         alien.x = alien_width + 2 * alien_width * alien_number
         alien.rect.x = alien.x
         alien.rect.y = alien_height + 2 * alien.rect.height * row_number
+        # 2 in 10 aliens are a shooter alien
+        if random.randint(1, 10) >= 9:
+            self.shooter_aliens.append((alien_number, row_number))
         self.aliens.add(alien)
+
+    def _convert_alien_number(self, tuple):
+        """
+        Take a tuple of alien_number, row_number, and
+        convert that to a list address in the list of sprites
+        """
+        x_number = tuple[0]
+        y_number = (tuple[1] * self.number_aliens_x)
+        self.shooter_alien_address = (x_number + y_number)
 
     def _check_fleet_edges(self):
         """Respond if an aliens have reached an edge."""
@@ -338,6 +427,8 @@ class AlienInvasion:
         self.ship.blitme()
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
+        for alien_bullet in self.alien_bullets.sprites():
+            alien_bullet.draw_alien_bullet()
         self.aliens.draw(self.screen)
 
         # Draw the score info and ability square
