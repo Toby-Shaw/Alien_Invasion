@@ -25,9 +25,9 @@ class Settings:
 
         # Shooter alien stuff
         self.alien_bullet_color = (0, 255, 0)
-        self.alien_bullet_width = 4
+        self.alien_bullet_width = 6
         self.alien_bullet_height = 15
-        self.alien_bullet_speed = 3.0
+        self.alien_bullet_speed = 2.0
         self.alien_bullets_allowed = 4
 
         self.initialize_dynamic_settings()
@@ -58,7 +58,7 @@ class Settings:
     def increase_speed(self):
         """Increase speed settings and alien point values"""
         if self.ship_speed < 8:
-            self.bullet_height *= (self.speedup_scale - 0.1)
+            self.bullet_height *= (self.speedup_scale - 0.2)
             self.ship_speed *= self.speedup_scale
             self.bullet_speed *= self.speedup_scale
         self.alien_speed *= self.speedup_scale

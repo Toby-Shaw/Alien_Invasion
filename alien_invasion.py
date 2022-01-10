@@ -218,12 +218,6 @@ class AlienInvasion:
     
     def _check_bullet_alien_collisions(self):
         """Respond to bullet-alien collisions."""
-        for bullet in self.bullets:
-            for alien in self.aliens:
-                check_collisions = pygame.sprite.collide_rect(
-                    bullet, alien)
-                if check_collisions:
-                    self.blacklist.append(alien)
         self.collisions = pygame.sprite.groupcollide(
         self.bullets, self.aliens, self.settings.normal_bullet, True)
 
@@ -318,7 +312,7 @@ class AlienInvasion:
             # Checks number of bullets, that there is no one in front,
             # and checks that the alien is alive.
             if (len(self.alien_bullets) <= self.settings.alien_bullets_allowed
-                and self._check_in_front(x) and self.alien_list[x] not in self.blacklist
+                and self._check_in_front(x) and self.alien_list[x] in self.aliens
                 and self.time_since_shot >= 100):
                 self.time_since_shot = 0
                 new_bullet = AlienBullet(self, self.alien_list[x])
@@ -329,24 +323,17 @@ class AlienInvasion:
         """Check before firing that no aliens are in front of the shooter"""
         if alien > 26:
             return True
-        elif alien < 27 and alien > 17:
-            if self.alien_list[alien + 9] not in self.blacklist:
-                return False
-            return True
+        elif alien < 27 and alien > 17 and (self.alien_list[alien + 9] in self.aliens):
+            return False
         elif alien < 18 and alien > 8:
-            if self.alien_list[alien + 9] not in self.blacklist:
-                return False
-            elif self.alien_list[alien + 18] not in self.blacklist:
-                return False
-            return True
+            for x in range(1, 3):
+                if self.alien_list[alien + 9 * x] in self.aliens:
+                    return False
         elif alien < 9:
-            if self.alien_list[alien + 9] not in self.blacklist:
-                return False
-            elif self.alien_list[alien + 18] not in self.blacklist:
-                return False
-            elif self.alien_list[alien + 27] not in self.blacklist:
-                return False
-            return True
+            for x in range(1, 4):
+                if self.alien_list[alien + 9 * x] in self.aliens:
+                    return False
+        return True
 
     def _create_fleet(self):
         """Create the fleet of aliens"""
@@ -366,7 +353,6 @@ class AlienInvasion:
         # Create the list of potential shooter aliens/addresses/blacklist
         self.shooter_aliens = []
         self.shooter_alien_addresses = []
-        self.blacklist = []
         self.time_since_shot = 0
 
         # Create the full fleet of aliens.
