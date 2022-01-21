@@ -23,6 +23,9 @@ class Settings:
         # How many strong bullets are allowed per powerup
         self.strong_bullets_allowed = 6
 
+        # How many hits the shield can take
+        self.allowed_hits = 2
+
         # Shooter alien stuff
         self.alien_bullet_color = (0, 255, 0)
         self.alien_bullet_width = 6
@@ -48,6 +51,13 @@ class Settings:
         self.cooldown_start = False
         self.cooldown_up = True
         self.cooldown = 0
+
+        # Warp shield timer/settings
+        self.warp_up = False
+        self.shield_cooldown_up = True
+        self.shield_cooldown_start = False
+        self.shield_cooldown = 0
+        self.shield_hits = 0
 
         # fleet_direction of 1 represents right, -1 = left.
         self.fleet_direction = 1
@@ -82,4 +92,9 @@ class Settings:
             self.bullet_color = (60, 60, 60)
             self.bullet_width = 4
             self.normal_bullet = True
+
+    def warp_shield_start(self):
+        """Start shield shenanigans"""
+        self.warp_up = True
+        self.shield_cooldown_start = False
 

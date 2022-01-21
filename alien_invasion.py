@@ -14,6 +14,7 @@ from scoreboard import Scoreboard
 from ability_square import AbilityButton
 from text import Text
 from alien_bullet import AlienBullet
+from shield import WarpShield
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -36,6 +37,8 @@ class AlienInvasion:
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
         self.alien_bullets = pygame.sprite.Group()
+        # Create the warp shield
+        self.warp_shield = WarpShield(self)
 
         self._create_fleet()
 
@@ -54,7 +57,8 @@ class AlienInvasion:
             (self.settings.screen_width / 2), 180)
 
         # Make the Ability "strong bullet"
-        self.ability_square = AbilityButton(self, "S")
+        self.strong_bullet_square = AbilityButton(self, "S", 130)
+        self.warp_square = AbilityButton(self, "W", 230)
 
         # Start Alien Invasion in an inactive state.
         self.stats.dict_of_states = {'main menu' : 1, 'play' : 2, 'pause' : 3}
@@ -70,6 +74,7 @@ class AlienInvasion:
                 self._update_aliens()
                 self._update_alien_bullets()
                 self._strong_bullet_cooldown()
+                self._shield_cooldown()
             self._update_screen()
 
     def _start_game(self):
@@ -77,7 +82,8 @@ class AlienInvasion:
         self.stats.reset_stats()
         self.stats.game_layer = 2
         self.settings.initialize_dynamic_settings()
-        self.ability_square.covering = False
+        self.strong_bullet_square.covering = False
+        self.warp_square.covering = False
         self.sb.prep_score()
         self.sb.prep_level()
         self.sb.prep_ships()
@@ -85,6 +91,7 @@ class AlienInvasion:
         # Get rid of any remaining aliens and bullets.
         self.aliens.empty()
         self.bullets.empty()
+        self.alien_bullets.empty()
 
         # Create a new fleet and center the ship.
         self._create_fleet()
@@ -139,11 +146,16 @@ class AlienInvasion:
         elif event.key == pygame.K_SPACE:
             self._fire_bullet()
         elif event.key == pygame.K_p:
-            self._start_game()
+            if self.stats.game_layer == 1:
+                self._start_game()
         elif event.key == pygame.K_s:
             if self.settings.normal_bullet and self.settings.cooldown_up:
                 self.settings.strong_bullet()
-                self.ability_square.covering = True
+                self.strong_bullet_square.covering = True
+        elif event.key == pygame.K_w:
+            if not self.settings.warp_up and self.settings.shield_cooldown_up:
+                self.settings.warp_shield_start()
+                self.warp_square.covering = True
         elif event.key == pygame.K_q:
             if self.stats.game_layer == 2:
                 self.stats.game_layer = 3
@@ -183,6 +195,7 @@ class AlienInvasion:
                 self.bullets.remove(bullet)
         
         self._check_bullet_alien_collisions()
+        self._check_alien_bullet_shield_collisions()
 
     def _update_alien_bullets(self):
         """Update alien bullets and get rid of out of bounds ones."""
@@ -205,17 +218,19 @@ class AlienInvasion:
 
     def _strong_bullet_cooldown(self):
         """If strong bullet just ended, starts cooldown"""
-        if self.settings.cooldown_start == True:
+        if self.settings.cooldown_start:
             if self.settings.cooldown < 1100:
                 self.settings.cooldown += 1
                 self.settings.cooldown_up = False
-            elif self.settings.cooldown >= 1100:
-                self.settings.cooldown_start = False
-                self.settings.cooldown = 0
-                self.settings.cooldown_up = True
-                self.ability_square.covering = False
+            else:
+                self._reset_strong_bullet_cooldown()
 
-    
+    def _reset_strong_bullet_cooldown(self):
+        self.settings.cooldown_start = False
+        self.settings.cooldown = 0
+        self.settings.cooldown_up = True
+        self.strong_bullet_square.covering = False
+
     def _check_bullet_alien_collisions(self):
         """Respond to bullet-alien collisions."""
         self.collisions = pygame.sprite.groupcollide(
@@ -230,16 +245,40 @@ class AlienInvasion:
         if not self.aliens:
             self._new_level()
 
+    def _check_alien_bullet_shield_collisions(self):
+        """Respond to shield-shooter alien collisions."""
+        if (pygame.sprite.spritecollide(self.warp_shield, self.alien_bullets, self.settings.warp_up)
+            and self.settings.warp_up):
+            self.settings.shield_hits += 1
+            if self.settings.shield_hits >= self.settings.allowed_hits:
+                self.settings.shield_cooldown_start = True
+                self.settings.warp_up = False
+
+    def _shield_cooldown(self):
+        """Once the shield is broken, do a cooldown"""
+        if self.settings.shield_cooldown_start:
+            if self.settings.shield_cooldown <= 1000:
+                self.settings.shield_cooldown += 1
+                self.settings.shield_cooldown_up = False
+            else:
+                self._reset_shield_cooldown()
+    
+    def _reset_shield_cooldown(self):
+        self.settings.shield_cooldown = 0
+        self.settings.shield_hits = 0
+        self.settings.shield_cooldown_up = True
+        self.settings.shield_cooldown_start = False
+        self.warp_square.covering = False
+
     def _new_level(self):
         """ Destroy existing bullets and create new fleet. """
         self.bullets.empty()
         self.alien_bullets.empty()
         self._create_fleet()
         self.settings.increase_speed()
-        self.settings.cooldown_start = False
-        self.settings.cooldown = 0
-        self.settings.cooldown_up = True
-        self.ability_square.covering = False
+        self._reset_strong_bullet_cooldown()
+        self._reset_shield_cooldown()
+        self.settings.warp_up = False
 
         # Increase level
         self.stats.level += 1
@@ -268,15 +307,17 @@ class AlienInvasion:
             # Reset strong bullet
             if not self.settings.normal_bullet:
                 self.settings.normal_bullet_reset()
-            self.ability_square.covering = False
-            self.settings.cooldown_start = False
-            self.settings.cooldown = 0
-            self.settings.cooldown_up = True
+            self._reset_strong_bullet_cooldown()
+            # Reset shield things
+            self._reset_shield_cooldown()
+
+            # How/Why would it still be up idk, but in case
+            self.settings.warp_up = False
 
             # Slow it down marginally
-            self.settings.ship_speed *= 0.9
-            self.settings.alien_speed *= 0.9
-            self.settings.bullet_speed *= 0.9
+            self.settings.ship_speed *= 0.95
+            self.settings.alien_speed *= 0.95
+            self.settings.bullet_speed *= 0.95
 
             # Pause.
             sleep(1)
@@ -321,7 +362,7 @@ class AlienInvasion:
 
     def _check_in_front(self, alien):
         """Check before firing that no aliens are in front of the shooter"""
-        if alien > 26:
+        if alien > 26: 
             return True
         elif alien < 27 and alien > 17 and (self.alien_list[alien + 9] in self.aliens):
             return False
@@ -373,8 +414,8 @@ class AlienInvasion:
         alien.x = alien_width + 2 * alien_width * alien_number
         alien.rect.x = alien.x
         alien.rect.y = alien_height + 2 * alien.rect.height * row_number
-        # 2 in 10 aliens are a shooter alien
-        if random.randint(1, 10) >= 9:
+        # 1 in 5 aliens are a shooter alien
+        if random.randint(1, 5) == 5:
             self.shooter_aliens.append((alien_number, row_number))
         self.aliens.add(alien)
 
@@ -417,9 +458,11 @@ class AlienInvasion:
             alien_bullet.draw_alien_bullet()
         self.aliens.draw(self.screen)
 
-        # Draw the score info and ability square
+        # Draw the score info and ability squares
         self.sb.show_score()
-        self.ability_square.draw_ability_square()
+        self.strong_bullet_square.draw_ability_square()
+        self.warp_square.draw_ability_square()
+        self.warp_shield.draw_shield()
         
     def _update_screen(self):
         """Update images on the screen, and flip to the new screen."""

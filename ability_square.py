@@ -2,7 +2,7 @@ import pygame.font
 
 class AbilityButton:
 
-    def __init__(self, ai_game, msg):
+    def __init__(self, ai_game, msg, offset):
         """Initialize the attributes of the button"""
         self.screen = ai_game.screen
         self.screen_rect = self.screen.get_rect()
@@ -16,7 +16,7 @@ class AbilityButton:
 
         # Build the rect object and put it a bit to the side of the score
         self.rect = pygame.Rect(0, 0, self.width, self.height)
-        self.rect.right = (ai_game.sb.score_rect.left - 150)
+        self.rect.right = (ai_game.sb.score_rect.left - offset)
         self.rect.top = 15
 
         # Need to prep the message as well
@@ -30,8 +30,6 @@ class AbilityButton:
 
     def draw_ability_square(self):
         """Draw blank square then center the message on it"""
+        self.screen.fill(self.button_color, self.rect)
         if not self.covering:
-            self.screen.fill(self.button_color, self.rect)
-        self.screen.blit(self.msg_image, self.msg_image_rect)
-        if self.covering:
-            self.screen.fill(self.button_color, self.rect)
+            self.screen.blit(self.msg_image, self.msg_image_rect)
