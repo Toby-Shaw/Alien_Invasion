@@ -104,7 +104,7 @@ class AlienInvasion:
         """Respond to keypresses and mouse events."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                high_score = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "w")
+                high_score = open("high_score.txt", "w")
                 high_score.write(str(self.stats.high_score))
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
@@ -161,12 +161,12 @@ class AlienInvasion:
                 self.stats.game_layer = 3
                 pygame.mouse.set_visible(True)
             elif self.stats.game_layer == 3:
-                high_score = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "w")
+                high_score = open("high_score.txt", "w")
                 high_score.write(str(self.stats.high_score))
                 self.stats.game_layer = 1
                 pygame.mouse.set_visible(True)
             else:
-                high_score = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "w")
+                high_score = open("high_score.txt", "w")
                 high_score.write(str(self.stats.high_score))
                 sys.exit()
 
