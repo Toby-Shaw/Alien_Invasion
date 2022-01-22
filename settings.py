@@ -30,7 +30,7 @@ class Settings:
         self.alien_bullet_color = (0, 255, 0)
         self.alien_bullet_width = 6
         self.alien_bullet_height = 15
-        self.alien_bullet_speed = 2.0
+        self.alien_bullet_speed = 4.0
         self.alien_bullets_allowed = 4
 
         self.initialize_dynamic_settings()
@@ -40,9 +40,9 @@ class Settings:
         self.bullet_width = 4
         self.normal_bullet = True
         self.bullet_color = (60, 60, 60)
-        self.ship_speed = 2.5
-        self.bullet_speed = 3.0
-        self.alien_speed = 1.0
+        self.ship_speed = 5.00
+        self.bullet_speed = 6.0
+        self.alien_speed = 2
         self.bullet_height = 15
         self.bullets_allowed = 4
 
@@ -94,7 +94,7 @@ class Settings:
             self.normal_bullet = True
 
     def warp_shield_start(self):
-        """Start shield shenanigans"""
+        """Start shield up, but don't start cooldown"""
         self.warp_up = True
         self.shield_cooldown_start = False
 

@@ -15,3 +15,5 @@ class Gamestats:
         self.ships_left = self.settings.ship_limit
         self.score = 0
         self.level = 1
+        self.current_fps = 100
+        self.tick_update = 0

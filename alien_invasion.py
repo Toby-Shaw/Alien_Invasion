@@ -60,6 +60,11 @@ class AlienInvasion:
         self.strong_bullet_square = AbilityButton(self, "S", 130)
         self.warp_square = AbilityButton(self, "W", 230)
 
+        # Create a pygame clock
+        self.clock = pygame.time.Clock()
+        self.fps_meter = Text(self, f"FPS: {self.stats.current_fps}", 30, (0, 255, 0), 
+            65, self.settings.screen_height - 30)
+
         # Start Alien Invasion in an inactive state.
         self.stats.dict_of_states = {'main menu' : 1, 'play' : 2, 'pause' : 3}
         self.stats.game_layer = 1
@@ -68,6 +73,7 @@ class AlienInvasion:
         """Start the main loop for the game."""
         while True:
             self._check_events()
+            self._update_fps()
             if self.stats.game_layer == 2:
                 self.ship.update()
                 self._update_bullets()
@@ -177,6 +183,15 @@ class AlienInvasion:
         elif event.key == pygame.K_LEFT:
             self.ship.moving_left = False
 
+    def _update_fps(self):
+        """Update clock, then update fps and visual every 100 frames"""
+        self.clock.tick(100)
+        self.stats.tick_update += 1
+        if self.stats.tick_update >= 100:
+            self.stats.current_fps = self.clock.get_fps()
+            self.stats.tick_update = 0
+            self.fps_meter._prep_text(f"FPS: {round(self.stats.current_fps)}")
+
     def _fire_bullet(self):
         """Create a new bullet and add it to the bullets group"""
         if len(self.bullets) < self.settings.bullets_allowed:
@@ -226,6 +241,7 @@ class AlienInvasion:
                 self._reset_strong_bullet_cooldown()
 
     def _reset_strong_bullet_cooldown(self):
+        """Reset the variables related to cooldown"""
         self.settings.cooldown_start = False
         self.settings.cooldown = 0
         self.settings.cooldown_up = True
@@ -250,6 +266,7 @@ class AlienInvasion:
         if (pygame.sprite.spritecollide(self.warp_shield, self.alien_bullets, self.settings.warp_up)
             and self.settings.warp_up):
             self.settings.shield_hits += 1
+            # If the shield has been hit too many times, start cooldown + it's broken
             if self.settings.shield_hits >= self.settings.allowed_hits:
                 self.settings.shield_cooldown_start = True
                 self.settings.warp_up = False
@@ -264,6 +281,7 @@ class AlienInvasion:
                 self._reset_shield_cooldown()
     
     def _reset_shield_cooldown(self):
+        """Reset the variables related to the shield cooldown."""
         self.settings.shield_cooldown = 0
         self.settings.shield_hits = 0
         self.settings.shield_cooldown_up = True
@@ -285,7 +303,7 @@ class AlienInvasion:
         self.sb.prep_level()
 
         # Stop strong bullet if active
-        if self.settings.normal_bullet == False:
+        if not self.settings.normal_bullet:
             self.settings.normal_bullet_reset() 
 
     def _ship_hit(self):
@@ -347,14 +365,14 @@ class AlienInvasion:
         self._fire_shooter_aliens()
         
     def _fire_shooter_aliens(self):
-        """Shoot sometimes"""
+        """Have one alien shoot at any one time, earlier list address favored"""
         # Runs through every shooter alien address
         for x in self.shooter_alien_addresses:
             # Checks number of bullets, that there is no one in front,
             # and checks that the alien is alive.
             if (len(self.alien_bullets) <= self.settings.alien_bullets_allowed
                 and self._check_in_front(x) and self.alien_list[x] in self.aliens
-                and self.time_since_shot >= 100):
+                and self.time_since_shot >= 50):
                 self.time_since_shot = 0
                 new_bullet = AlienBullet(self, self.alien_list[x])
                 self.alien_bullets.add(new_bullet)
@@ -414,8 +432,8 @@ class AlienInvasion:
         alien.x = alien_width + 2 * alien_width * alien_number
         alien.rect.x = alien.x
         alien.rect.y = alien_height + 2 * alien.rect.height * row_number
-        # 1 in 5 aliens are a shooter alien
-        if random.randint(1, 5) == 5:
+        # 1 in 3 aliens are a shooter alien
+        if random.randint(1, 3) == 3:
             self.shooter_aliens.append((alien_number, row_number))
         self.aliens.add(alien)
 
@@ -451,6 +469,7 @@ class AlienInvasion:
         self.settings.fleet_direction *= -1
 
     def _update_play_screen(self):
+        """Draw everything on the play screen"""
         self.ship.blitme()
         for bullet in self.bullets.sprites():
             bullet.draw_bullet()
@@ -481,6 +500,9 @@ class AlienInvasion:
             self.pause.draw_text()
             self.main_menu.draw_button()
             self.resume.draw_button()
+
+        # Draw the fps screen on every screen
+        self.fps_meter.draw_text()
         
         pygame.display.flip()
 
