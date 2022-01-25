@@ -46,9 +46,11 @@ class AlienInvasion:
         self.play_button = Button(self, "Play", (0, 255, 0),
             (self.settings.screen_width / 2), (self.settings.screen_height / 2))
         self.main_menu = Button(self, "Main Menu", (0, 255, 0), 
-            (self.settings.screen_width / 2), self.settings.screen_height / 2 + 120)
+            (self.settings.screen_width / 2), self.settings.screen_height / 2 + 100)
         self.resume = Button(self, "Resume", (0, 255, 0),
             (self.settings.screen_width / 2), (self.settings.screen_height / 2))
+        self.info = Button(self, "Information", (0, 255, 0), 
+            self.settings.screen_width / 2, (self.settings.screen_height / 2 + 100))
 
         # Make the title + Pause text
         self.title = Text(self, "Alien Invasion", 110, (0, 255, 0), 
@@ -56,9 +58,21 @@ class AlienInvasion:
         self.pause = Text(self, "Paused", 110, (0, 255, 0),
             (self.settings.screen_width / 2), 180)
 
+        # Make the Information text pieces
+        self.strong_bullet_info = Text(self, 
+        """Strong Bullet is an  activatable ability that  
+        allows your bullets to  pierce multiple enemies.  
+        Activate it with  the down key""", 
+            40, (0, 0, 0), self.settings.screen_width - 250, 100)
+        self.shield_info = Text(self, 
+        """Warp Shield is an  activatable ability that  
+        blocks up to two bullets  from the enemies  before breaking.  
+        Activate it with  the up key.""",
+            40, (0, 0, 0), self.settings.screen_width - 250, 400)
+
         # Make the Ability "strong bullet"
-        self.strong_bullet_square = AbilityButton(self, "S", 130)
-        self.warp_square = AbilityButton(self, "W", 230)
+        self.strong_bullet_square = AbilityButton(self, "B", 130)
+        self.warp_square = AbilityButton(self, "S", 230)
 
         # Create a pygame clock
         self.clock = pygame.time.Clock()
@@ -66,7 +80,7 @@ class AlienInvasion:
             65, self.settings.screen_height - 30)
 
         # Start Alien Invasion in an inactive state.
-        self.stats.dict_of_states = {'main menu' : 1, 'play' : 2, 'pause' : 3}
+        self.stats.dict_of_states = {'main menu' : 1, 'play' : 2, 'pause' : 3, 'info' : 4}
         self.stats.game_layer = 1
 
     def run_game(self):
@@ -119,29 +133,29 @@ class AlienInvasion:
                 self._check_keyup_events(event)
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_pos = pygame.mouse.get_pos()
-                self._check_pause_buttons(mouse_pos)
                 self._check_main_buttons(mouse_pos)
+                self._check_pause_buttons(mouse_pos)
                 
-
     def _check_main_buttons(self, mouse_pos):
         """Start a new game when the player clicks Play."""
         button_clicked = self.play_button.rect.collidepoint(mouse_pos)
-        if button_clicked and self.stats.game_layer == 1:
+        if self.stats.game_layer == 1:
+            if button_clicked:
             # Reset the game settings.
-            self._start_game()
+                self._start_game()
+            elif self.info.rect.collidepoint(mouse_pos):
+            # Go to info screen
+                self.stats.game_layer = 4
 
     def _check_pause_buttons(self, mouse_pos):
         """Check pause screen buttons"""
         if self.stats.game_layer == 3:
-            button_clicked1 = self.main_menu.rect.collidepoint(mouse_pos)
-            if button_clicked1:
+            if self.main_menu.rect.collidepoint(mouse_pos):
                 # Return to the main menu if clicked
                 self.stats.game_layer = 1
-                self._update_screen()
             elif self.resume.rect.collidepoint(mouse_pos):
                 # Return to the game if clicked
                 self.stats.game_layer = 2
-                self._update_screen()
 
     def _check_keydown_events(self, event):
         """Respond to keypresses"""
@@ -150,31 +164,44 @@ class AlienInvasion:
         elif event.key == pygame.K_LEFT:
             self.ship.moving_left = True
         elif event.key == pygame.K_SPACE:
-            self._fire_bullet()
+            if self.stats.game_layer == 1:
+                self._start_game()
+            elif self.stats.game_layer == 2:
+                self._fire_bullet()
         elif event.key == pygame.K_p:
             if self.stats.game_layer == 1:
                 self._start_game()
-        elif event.key == pygame.K_s:
+        elif event.key == pygame.K_DOWN:
             if self.settings.normal_bullet and self.settings.cooldown_up:
                 self.settings.strong_bullet()
                 self.strong_bullet_square.covering = True
-        elif event.key == pygame.K_w:
+        elif event.key == pygame.K_UP:
             if not self.settings.warp_up and self.settings.shield_cooldown_up:
                 self.settings.warp_shield_start()
                 self.warp_square.covering = True
         elif event.key == pygame.K_q:
-            if self.stats.game_layer == 2:
-                self.stats.game_layer = 3
-                pygame.mouse.set_visible(True)
-            elif self.stats.game_layer == 3:
-                high_score = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "w")
-                high_score.write(str(self.stats.high_score))
-                self.stats.game_layer = 1
-                pygame.mouse.set_visible(True)
-            else:
-                high_score = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "w")
-                high_score.write(str(self.stats.high_score))
-                sys.exit()
+            self._check_key_q_events()
+
+    def _check_key_q_events(self):
+        """Change screens when q is pressed"""
+        if self.stats.game_layer == 2:
+            # Go to pause screen if on game screen
+            self.stats.game_layer = 3
+            pygame.mouse.set_visible(True)
+        elif self.stats.game_layer == 3:
+            # If on pause, go to the main menu
+            high_score = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "w")
+            high_score.write(str(self.stats.high_score))
+            self.stats.game_layer = 1
+            pygame.mouse.set_visible(True)
+        elif self.stats.game_layer == 4:
+            # Go back to the main menu
+            self.stats.game_layer = 1
+        else:
+            # Quit if on the main menu
+            high_score = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "w")
+            high_score.write(str(self.stats.high_score))
+            sys.exit()
 
     def _check_keyup_events(self, event):
         """Respond to key releases."""
@@ -219,7 +246,7 @@ class AlienInvasion:
 
         # If out of bounds, delete the bullet
         for bullet in self.alien_bullets.copy():
-            if bullet.rect.top >= self.settings.screen_height:
+            if bullet.rect.top >= self.settings.screen_height - 20:
                 self.alien_bullets.remove(bullet)
 
     def _strong_bullet_timer(self):
@@ -494,12 +521,18 @@ class AlienInvasion:
         elif self.stats.game_layer == 1:
             self.title.draw_text()
             self.play_button.draw_button()
+            self.info.draw_button()
             
-        # Draw the puase screen when appropriate
+        # Draw the pause screen when appropriate
         elif self.stats.game_layer == 3:
             self.pause.draw_text()
             self.main_menu.draw_button()
             self.resume.draw_button()
+
+        # Draw the information screen when appropriate
+        elif self.stats.game_layer == 4:
+            self.strong_bullet_info.draw_text()
+            self.shield_info.draw_text()
 
         # Draw the fps screen on every screen
         self.fps_meter.draw_text()
