@@ -124,7 +124,7 @@ class AlienInvasion:
         """Respond to keypresses and mouse events."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                high_score = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "w")
+                high_score = open("high_score.txt", "w")
                 high_score.write(str(self.stats.high_score))
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
@@ -137,7 +137,7 @@ class AlienInvasion:
                 self._check_pause_buttons(mouse_pos)
                 
     def _check_main_buttons(self, mouse_pos):
-        """Start a new game when the player clicks Play."""
+        """Check the main screen buttons"""
         button_clicked = self.play_button.rect.collidepoint(mouse_pos)
         if self.stats.game_layer == 1:
             if button_clicked:
@@ -190,7 +190,7 @@ class AlienInvasion:
             pygame.mouse.set_visible(True)
         elif self.stats.game_layer == 3:
             # If on pause, go to the main menu
-            high_score = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "w")
+            high_score = open("high_score.txt", "w")
             high_score.write(str(self.stats.high_score))
             self.stats.game_layer = 1
             pygame.mouse.set_visible(True)
@@ -199,7 +199,7 @@ class AlienInvasion:
             self.stats.game_layer = 1
         else:
             # Quit if on the main menu
-            high_score = open("/home/toby/Pythonthings/Games/Alien_Invasion/high_score.txt", "w")
+            high_score = open("high_score.txt", "w")
             high_score.write(str(self.stats.high_score))
             sys.exit()
 
@@ -261,7 +261,7 @@ class AlienInvasion:
     def _strong_bullet_cooldown(self):
         """If strong bullet just ended, starts cooldown"""
         if self.settings.cooldown_start:
-            if self.settings.cooldown < 1100:
+            if self.settings.cooldown < 900:
                 self.settings.cooldown += 1
                 self.settings.cooldown_up = False
             else:
@@ -301,7 +301,7 @@ class AlienInvasion:
     def _shield_cooldown(self):
         """Once the shield is broken, do a cooldown"""
         if self.settings.shield_cooldown_start:
-            if self.settings.shield_cooldown <= 1000:
+            if self.settings.shield_cooldown <= 900:
                 self.settings.shield_cooldown += 1
                 self.settings.shield_cooldown_up = False
             else:
