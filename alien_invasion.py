@@ -304,6 +304,7 @@ class AlienInvasion:
             if self.settings.shield_cooldown <= 900:
                 self.settings.shield_cooldown += 1
                 self.settings.shield_cooldown_up = False
+                self.warp_square.cooldown_stage = self.settings.shield_cooldown // 50
             else:
                 self._reset_shield_cooldown()
     
