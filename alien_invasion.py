@@ -1,6 +1,7 @@
 import sys
 from time import sleep
 import random
+import os
 
 import pygame
 
@@ -102,8 +103,8 @@ class AlienInvasion:
         self.stats.reset_stats()
         self.stats.game_layer = 2
         self.settings.initialize_dynamic_settings()
-        self.strong_bullet_square.covering = False
-        self.warp_square.covering = False
+        self._reset_shield_cooldown()
+        self._reset_strong_bullet_cooldown()
         self.sb.prep_score()
         self.sb.prep_level()
         self.sb.prep_ships()
@@ -159,9 +160,9 @@ class AlienInvasion:
 
     def _check_keydown_events(self, event):
         """Respond to keypresses"""
-        if event.key == pygame.K_RIGHT:
+        if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
             self.ship.moving_right = True
-        elif event.key == pygame.K_LEFT:
+        elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
             self.ship.moving_left = True
         elif event.key == pygame.K_SPACE:
             if self.stats.game_layer == 1:
@@ -171,18 +172,18 @@ class AlienInvasion:
         elif event.key == pygame.K_p:
             if self.stats.game_layer == 1:
                 self._start_game()
-        elif event.key == pygame.K_DOWN:
+        elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
             if self.settings.normal_bullet and self.settings.cooldown_up:
                 self.settings.strong_bullet()
                 self.strong_bullet_square.covering = True
-        elif event.key == pygame.K_UP:
+        elif event.key == pygame.K_UP or event.key == pygame.K_w:
             if not self.settings.warp_up and self.settings.shield_cooldown_up:
                 self.settings.warp_shield_start()
                 self.warp_square.covering = True
-        elif event.key == pygame.K_q:
-            self._check_key_q_events()
+        elif event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
+            self._check_escape_events()
 
-    def _check_key_q_events(self):
+    def _check_escape_events(self):
         """Change screens when q is pressed"""
         if self.stats.game_layer == 2:
             # Go to pause screen if on game screen
@@ -190,7 +191,7 @@ class AlienInvasion:
             pygame.mouse.set_visible(True)
         elif self.stats.game_layer == 3:
             # If on pause, go to the main menu
-            high_score = open("high_score.txt", "w")
+            high_score = open("Games/Alien_Invasion/high_score.txt", "w")
             high_score.write(str(self.stats.high_score))
             self.stats.game_layer = 1
             pygame.mouse.set_visible(True)
@@ -199,15 +200,15 @@ class AlienInvasion:
             self.stats.game_layer = 1
         else:
             # Quit if on the main menu
-            high_score = open("high_score.txt", "w")
+            high_score = open("Games/Alien_Invasion/high_score.txt", "w")
             high_score.write(str(self.stats.high_score))
             sys.exit()
 
     def _check_keyup_events(self, event):
         """Respond to key releases."""
-        if event.key == pygame.K_RIGHT:
+        if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
             self.ship.moving_right = False
-        elif event.key == pygame.K_LEFT:
+        elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
             self.ship.moving_left = False
 
     def _update_fps(self):
@@ -261,9 +262,14 @@ class AlienInvasion:
     def _strong_bullet_cooldown(self):
         """If strong bullet just ended, starts cooldown"""
         if self.settings.cooldown_start:
-            if self.settings.cooldown < 900:
+            if self.settings.cooldown == 0:
+                self.settings.cooldown += 1
+                self.strong_bullet_square.button_color = (200, 200, 200)
+                self.strong_bullet_square._prep_caption('B')
+            elif self.settings.cooldown < 900:
                 self.settings.cooldown += 1
                 self.settings.cooldown_up = False
+                self.strong_bullet_square.cooldown_stage = self.settings.cooldown // 18
             else:
                 self._reset_strong_bullet_cooldown()
 
@@ -273,6 +279,9 @@ class AlienInvasion:
         self.settings.cooldown = 0
         self.settings.cooldown_up = True
         self.strong_bullet_square.covering = False
+        self.strong_bullet_square.cooldown_stage = 0
+        self.strong_bullet_square.button_color = (86, 91, 203)
+        self.strong_bullet_square._prep_caption('B')
 
     def _check_bullet_alien_collisions(self):
         """Respond to bullet-alien collisions."""
@@ -281,7 +290,7 @@ class AlienInvasion:
 
         if self.collisions:
             for aliens in self.collisions.values():
-                self.stats.score += self.settings.alien_points*len(aliens)
+                self.stats.score += self.settings.alien_points * len(aliens)
             self.sb.prep_score()
             self.sb.check_high_score()
 
@@ -301,13 +310,17 @@ class AlienInvasion:
     def _shield_cooldown(self):
         """Once the shield is broken, do a cooldown"""
         if self.settings.shield_cooldown_start:
-            if self.settings.shield_cooldown <= 900:
+            if self.settings.shield_cooldown == 0:
+                self.settings.shield_cooldown += 1
+                self.warp_square.button_color = (200, 200, 200)
+                self.warp_square._prep_caption('S')
+            elif self.settings.shield_cooldown < 900:
                 self.settings.shield_cooldown += 1
                 self.settings.shield_cooldown_up = False
-                self.warp_square.cooldown_stage = self.settings.shield_cooldown // 50
+                self.warp_square.cooldown_stage = self.settings.shield_cooldown // 18
             else:
                 self._reset_shield_cooldown()
-    
+                
     def _reset_shield_cooldown(self):
         """Reset the variables related to the shield cooldown."""
         self.settings.shield_cooldown = 0
@@ -315,6 +328,9 @@ class AlienInvasion:
         self.settings.shield_cooldown_up = True
         self.settings.shield_cooldown_start = False
         self.warp_square.covering = False
+        self.warp_square.cooldown_stage = 0
+        self.warp_square.button_color = (86, 91, 203)
+        self.warp_square._prep_caption('S')
 
     def _new_level(self):
         """ Destroy existing bullets and create new fleet. """

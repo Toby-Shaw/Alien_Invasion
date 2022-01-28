@@ -6,22 +6,20 @@ class AbilityButton:
         """Initialize the attributes of the button"""
         self.screen = ai_game.screen
         self.screen_rect = self.screen.get_rect()
+        self.ai_game = ai_game
 
         # Set the dimensions and color of the button
         self.width, self.height = 50, 50
         self.button_color = (86, 91, 203)
         self.text_color = (255, 0, 0)
-        self.font = pygame.font.SysFont(None, 48)
+        self.font = pygame.font.SysFont(None, 60)
         self.covering = False
 
         # Set the cooldown stage to 0
         self.cooldown_stage = 0
 
-        # Build the rect object and put it a bit to the side of the score
-        #self.rect = pygame.Rect(0, 0, self.width, self.height)
-        #self.rect.right = (ai_game.sb.score_rect.left - offset)
-        #self.rect.top = 15
-        # Trying a new thing for cooldown purposes
+        # Cooldown things, split the rect button into 50 rects to bring into 
+        # foreground or background according to cooldown
         self.number_of_slices = 50
         self.rect_list = []
         for x in range(self.number_of_slices):
@@ -41,8 +39,16 @@ class AbilityButton:
 
     def draw_ability_square(self):
         """Draw blank square then center the message on it"""
-        #self.screen.fill(self.button_color, self.rect)
-        for rect in range(len(self.rect_list)):
-            self.screen.fill(self.button_color, self.rect_list[rect])
-        if not self.covering:
+        if self.covering:
+            # If cooldown, draw the appropriate layers under the letter
+            for rect in range(0, self.cooldown_stage):
+                self.screen.fill(self.button_color, self.rect_list[rect])
+            self.screen.blit(self.msg_image, self.msg_image_rect)
+            # Then draw all the ones that are still on top
+            for rect in range(self.cooldown_stage, self.number_of_slices):
+                self.screen.fill(self.button_color, self.rect_list[rect])
+        else:
+            # Otherwise just draw them all under the letter
+            for rect in range(self.number_of_slices):
+                self.screen.fill(self.button_color, self.rect_list[rect])
             self.screen.blit(self.msg_image, self.msg_image_rect)
