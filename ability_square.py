@@ -14,9 +14,13 @@ class AbilityButton:
         self.text_color = (255, 0, 0)
         self.font = pygame.font.SysFont(None, 60)
         self.covering = False
+        self.msg = msg
 
-        # Set the cooldown stage to 0
+        # Set the cooldown stage to 0, other cooldown things
         self.cooldown_stage = 0
+        self.cooldown_start = False
+        self.cooldown_up = True
+        self.cooldown = 0
 
         # Cooldown things, split the rect button into 50 rects to bring into 
         # foreground or background according to cooldown
@@ -29,13 +33,37 @@ class AbilityButton:
             self.rect_list[y].top = 15 + (self.height / self.number_of_slices * y)
 
         # Need to prep the message as well
-        self._prep_caption(msg)
+        self._prep_caption()
 
-    def _prep_caption(self, msg):
+    def _prep_caption(self):
         """Turn the msg into a rendered caption and center it on the square"""
-        self.msg_image = self.font.render(msg, True, self.text_color, self.button_color)
+        self.msg_image = self.font.render(self.msg, True, self.text_color, self.button_color)
         self.msg_image_rect = self.msg_image.get_rect()
         self.msg_image_rect.center = self.rect_list[self.number_of_slices // 2].center
+
+    def _cooldown(self):
+        """If told to start the cooldown, shift things and count accordingly"""
+        if self.cooldown_start:
+            if self.cooldown == 0:
+                self.cooldown += 1
+                self.button_color = (200, 200, 200)
+                self._prep_caption()
+            elif self.cooldown < 900:
+                self.cooldown += 1
+                self.cooldown_up = False
+                self.cooldown_stage = self.cooldown // 18
+            else:
+                self._reset_cooldown()
+
+    def _reset_cooldown(self):
+        """Reset the variables related to cooldown"""
+        self.cooldown_start = False
+        self.cooldown = 0
+        self.cooldown_up = True
+        self.covering = False
+        self.cooldown_stage = 0
+        self.button_color = (86, 91, 203)
+        self._prep_caption()
 
     def draw_ability_square(self):
         """Draw blank square then center the message on it"""

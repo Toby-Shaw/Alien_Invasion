@@ -96,8 +96,3 @@ class Settings:
             self.bullet_width = 4
             self.normal_bullet = True
 
-    def warp_shield_start(self):
-        """Start shield up, but don't start cooldown"""
-        self.warp_up = True
-        self.shield_cooldown_start = False
-

@@ -61,15 +61,15 @@ class AlienInvasion:
 
         # Make the Information text pieces
         self.strong_bullet_info = Text(self, 
-        """Strong Bullet is an  activatable ability that  
-        allows your bullets to  pierce multiple enemies.  
-        Activate it with  the down key""", 
-            40, (0, 0, 0), self.settings.screen_width - 250, 100)
+        """Strong Bullet is an activatable ability that
+        allows your bullets to  pierce multiple enemies.
+        Activate it with the down key or S""", 
+            40, (0, 0, 0), 550, 100)
         self.shield_info = Text(self, 
-        """Warp Shield is an  activatable ability that  
-        blocks up to two bullets  from the enemies  before breaking.  
-        Activate it with  the up key.""",
-            40, (0, 0, 0), self.settings.screen_width - 250, 400)
+        """Warp Shield is an activatable ability that
+        blocks up to two bullets  from the enemies before breaking.
+        Activate it with the up key or W.""",
+            40, (0, 0, 0), 550, 250)
 
         # Make the Ability "strong bullet"
         self.strong_bullet_square = AbilityButton(self, "B", 130)
@@ -94,8 +94,8 @@ class AlienInvasion:
                 self._update_bullets()
                 self._update_aliens()
                 self._update_alien_bullets()
-                self._strong_bullet_cooldown()
-                self._shield_cooldown()
+                self.strong_bullet_square._cooldown()
+                self.warp_square._cooldown()
             self._update_screen()
 
     def _start_game(self):
@@ -103,8 +103,8 @@ class AlienInvasion:
         self.stats.reset_stats()
         self.stats.game_layer = 2
         self.settings.initialize_dynamic_settings()
-        self._reset_shield_cooldown()
-        self._reset_strong_bullet_cooldown()
+        self.warp_square._reset_cooldown()
+        self.strong_bullet_square._reset_cooldown()
         self.sb.prep_score()
         self.sb.prep_level()
         self.sb.prep_ships()
@@ -178,7 +178,7 @@ class AlienInvasion:
                 self.strong_bullet_square.covering = True
         elif event.key == pygame.K_UP or event.key == pygame.K_w:
             if not self.settings.warp_up and self.settings.shield_cooldown_up:
-                self.settings.warp_shield_start()
+                self.settings.warp_up = True
                 self.warp_square.covering = True
         elif event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
             self._check_escape_events()
@@ -255,33 +255,9 @@ class AlienInvasion:
         if not self.settings.normal_bullet:
             self.settings.strong_bullets_fired += 1
             # Checks number of strong bullets, discontinues if necessary
-            if self.settings.strong_bullets_allowed < self.settings.strong_bullets_fired:
+            if self.settings.strong_bullets_fired > self.settings.strong_bullets_allowed:
                 self.settings.normal_bullet_reset()
-                self.settings.cooldown_start = True
-
-    def _strong_bullet_cooldown(self):
-        """If strong bullet just ended, starts cooldown"""
-        if self.settings.cooldown_start:
-            if self.settings.cooldown == 0:
-                self.settings.cooldown += 1
-                self.strong_bullet_square.button_color = (200, 200, 200)
-                self.strong_bullet_square._prep_caption('B')
-            elif self.settings.cooldown < 900:
-                self.settings.cooldown += 1
-                self.settings.cooldown_up = False
-                self.strong_bullet_square.cooldown_stage = self.settings.cooldown // 18
-            else:
-                self._reset_strong_bullet_cooldown()
-
-    def _reset_strong_bullet_cooldown(self):
-        """Reset the variables related to cooldown"""
-        self.settings.cooldown_start = False
-        self.settings.cooldown = 0
-        self.settings.cooldown_up = True
-        self.strong_bullet_square.covering = False
-        self.strong_bullet_square.cooldown_stage = 0
-        self.strong_bullet_square.button_color = (86, 91, 203)
-        self.strong_bullet_square._prep_caption('B')
+                self.strong_bullet_square.cooldown_start = True
 
     def _check_bullet_alien_collisions(self):
         """Respond to bullet-alien collisions."""
@@ -304,33 +280,8 @@ class AlienInvasion:
             self.settings.shield_hits += 1
             # If the shield has been hit too many times, start cooldown + it's broken
             if self.settings.shield_hits >= self.settings.allowed_hits:
-                self.settings.shield_cooldown_start = True
+                self.warp_square.cooldown_start = True
                 self.settings.warp_up = False
-
-    def _shield_cooldown(self):
-        """Once the shield is broken, do a cooldown"""
-        if self.settings.shield_cooldown_start:
-            if self.settings.shield_cooldown == 0:
-                self.settings.shield_cooldown += 1
-                self.warp_square.button_color = (200, 200, 200)
-                self.warp_square._prep_caption('S')
-            elif self.settings.shield_cooldown < 900:
-                self.settings.shield_cooldown += 1
-                self.settings.shield_cooldown_up = False
-                self.warp_square.cooldown_stage = self.settings.shield_cooldown // 18
-            else:
-                self._reset_shield_cooldown()
-                
-    def _reset_shield_cooldown(self):
-        """Reset the variables related to the shield cooldown."""
-        self.settings.shield_cooldown = 0
-        self.settings.shield_hits = 0
-        self.settings.shield_cooldown_up = True
-        self.settings.shield_cooldown_start = False
-        self.warp_square.covering = False
-        self.warp_square.cooldown_stage = 0
-        self.warp_square.button_color = (86, 91, 203)
-        self.warp_square._prep_caption('S')
 
     def _new_level(self):
         """ Destroy existing bullets and create new fleet. """
@@ -338,8 +289,8 @@ class AlienInvasion:
         self.alien_bullets.empty()
         self._create_fleet()
         self.settings.increase_speed()
-        self._reset_strong_bullet_cooldown()
-        self._reset_shield_cooldown()
+        self.strong_bullet_square._reset_cooldown()
+        self.warp_square._reset_cooldown()
         self.settings.warp_up = False
 
         # Increase level
@@ -369,10 +320,9 @@ class AlienInvasion:
             # Reset strong bullet
             if not self.settings.normal_bullet:
                 self.settings.normal_bullet_reset()
-            self._reset_strong_bullet_cooldown()
+            self.strong_bullet_square._reset_cooldown()
             # Reset shield things
-            self._reset_shield_cooldown()
-
+            self.warp_square._reset_cooldown()
             # How/Why would it still be up idk, but in case
             self.settings.warp_up = False
 
