@@ -16,6 +16,8 @@ from ability_square import AbilityButton
 from text import Text
 from alien_bullet import AlienBullet
 from shield import WarpShield
+from game_states import GameStates as GS
+from alien_pattern import AlienPattern as AP
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -37,6 +39,10 @@ class AlienInvasion:
         self.ship = Ship(self)
         self.bullets = pygame.sprite.Group()
         self.aliens = pygame.sprite.Group()
+        self.row1_aliens = pygame.sprite.Group()
+        self.row2_aliens = pygame.sprite.Group()
+        self.row3_aliens = pygame.sprite.Group()
+        self.three_rows_group = [self.row1_aliens, self.row2_aliens, self.row3_aliens]
         self.alien_bullets = pygame.sprite.Group()
         # Create the warp shield
         self.warp_shield = WarpShield(self)
@@ -81,15 +87,16 @@ class AlienInvasion:
             65, self.settings.screen_height - 30)
 
         # Start Alien Invasion in an inactive state.
-        self.stats.dict_of_states = {'main menu' : 1, 'play' : 2, 'pause' : 3, 'info' : 4}
-        self.stats.game_layer = 1
+        self.stats.game_layer = GS.MAINMENU
+
+        self.alien_pattern = AP.BASIC
 
     def run_game(self):
         """Start the main loop for the game."""
         while True:
             self._check_events()
             self._update_fps()
-            if self.stats.game_layer == 2:
+            if self.stats.game_layer == GS.PLAYSCREEN:
                 self.ship.update()
                 self._update_bullets()
                 self._update_aliens()
@@ -101,7 +108,7 @@ class AlienInvasion:
     def _start_game(self):
         # Reset the game statistics.
         self.stats.reset_stats()
-        self.stats.game_layer = 2
+        self.stats.game_layer = GS.PLAYSCREEN
         self.settings.initialize_dynamic_settings()
         self.warp_square._reset_cooldown()
         self.strong_bullet_square._reset_cooldown()
@@ -140,23 +147,23 @@ class AlienInvasion:
     def _check_main_buttons(self, mouse_pos):
         """Check the main screen buttons"""
         button_clicked = self.play_button.rect.collidepoint(mouse_pos)
-        if self.stats.game_layer == 1:
+        if self.stats.game_layer == GS.MAINMENU:
             if button_clicked:
             # Reset the game settings.
                 self._start_game()
             elif self.info.rect.collidepoint(mouse_pos):
             # Go to info screen
-                self.stats.game_layer = 4
+                self.stats.game_layer = GS.INFOSCREEN
 
     def _check_pause_buttons(self, mouse_pos):
         """Check pause screen buttons"""
-        if self.stats.game_layer == 3:
+        if self.stats.game_layer == GS.PAUSEMENU:
             if self.main_menu.rect.collidepoint(mouse_pos):
                 # Return to the main menu if clicked
-                self.stats.game_layer = 1
+                self.stats.game_layer = GS.MAINMENU
             elif self.resume.rect.collidepoint(mouse_pos):
                 # Return to the game if clicked
-                self.stats.game_layer = 2
+                self.stats.game_layer = GS.PLAYSCREEN
 
     def _check_keydown_events(self, event):
         """Respond to keypresses"""
@@ -165,19 +172,19 @@ class AlienInvasion:
         elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
             self.ship.moving_left = True
         elif event.key == pygame.K_SPACE:
-            if self.stats.game_layer == 1:
+            if self.stats.game_layer == GS.MAINMENU:
                 self._start_game()
-            elif self.stats.game_layer == 2:
+            elif self.stats.game_layer == GS.PLAYSCREEN:
                 self._fire_bullet()
         elif event.key == pygame.K_p:
-            if self.stats.game_layer == 1:
+            if self.stats.game_layer == GS.MAINMENU:
                 self._start_game()
         elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-            if self.settings.normal_bullet and self.settings.cooldown_up:
+            if self.settings.normal_bullet and self.strong_bullet_square.cooldown_up:
                 self.settings.strong_bullet()
                 self.strong_bullet_square.covering = True
         elif event.key == pygame.K_UP or event.key == pygame.K_w:
-            if not self.settings.warp_up and self.settings.shield_cooldown_up:
+            if not self.settings.warp_up and self.warp_square.cooldown_up:
                 self.settings.warp_up = True
                 self.warp_square.covering = True
         elif event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
@@ -185,19 +192,19 @@ class AlienInvasion:
 
     def _check_escape_events(self):
         """Change screens when q is pressed"""
-        if self.stats.game_layer == 2:
+        if self.stats.game_layer == GS.PLAYSCREEN:
             # Go to pause screen if on game screen
-            self.stats.game_layer = 3
+            self.stats.game_layer = GS.PAUSEMENU
             pygame.mouse.set_visible(True)
-        elif self.stats.game_layer == 3:
+        elif self.stats.game_layer == GS.PAUSEMENU:
             # If on pause, go to the main menu
             high_score = open("Games/Alien_Invasion/high_score.txt", "w")
             high_score.write(str(self.stats.high_score))
-            self.stats.game_layer = 1
+            self.stats.game_layer = GS.MAINMENU
             pygame.mouse.set_visible(True)
-        elif self.stats.game_layer == 4:
+        elif self.stats.game_layer == GS.INFOSCREEN:
             # Go back to the main menu
-            self.stats.game_layer = 1
+            self.stats.game_layer = GS.MAINMENU
         else:
             # Quit if on the main menu
             high_score = open("Games/Alien_Invasion/high_score.txt", "w")
@@ -261,8 +268,13 @@ class AlienInvasion:
 
     def _check_bullet_alien_collisions(self):
         """Respond to bullet-alien collisions."""
-        self.collisions = pygame.sprite.groupcollide(
-        self.bullets, self.aliens, self.settings.normal_bullet, True)
+        if self.alien_pattern == AP.BASIC:
+            self.collisions = pygame.sprite.groupcollide(
+            self.bullets, self.aliens, self.settings.normal_bullet, True)
+        elif self.alien_pattern == AP.THREEROWS:
+            for x in self.three_rows_group:
+                self.collisions = pygame.sprite.groupcollide(
+                    self.bullets, x, self.settings.normal_bullet, True)
 
         if self.collisions:
             for aliens in self.collisions.values():
@@ -280,6 +292,7 @@ class AlienInvasion:
             self.settings.shield_hits += 1
             # If the shield has been hit too many times, start cooldown + it's broken
             if self.settings.shield_hits >= self.settings.allowed_hits:
+                self.settings.shield_hits = 0
                 self.warp_square.cooldown_start = True
                 self.settings.warp_up = False
 
@@ -481,23 +494,23 @@ class AlienInvasion:
         """Update images on the screen, and flip to the new screen."""
         self.screen.fill(self.settings.bg_color)
         # Draw the play screen when appropriate
-        if self.stats.game_layer == 2:
+        if self.stats.game_layer == GS.PLAYSCREEN:
             self._update_play_screen()
             
         # Draw the main menu when appropriate.
-        elif self.stats.game_layer == 1:
+        elif self.stats.game_layer == GS.MAINMENU:
             self.title.draw_text()
             self.play_button.draw_button()
             self.info.draw_button()
             
         # Draw the pause screen when appropriate
-        elif self.stats.game_layer == 3:
+        elif self.stats.game_layer == GS.PAUSEMENU:
             self.pause.draw_text()
             self.main_menu.draw_button()
             self.resume.draw_button()
 
         # Draw the information screen when appropriate
-        elif self.stats.game_layer == 4:
+        elif self.stats.game_layer == GS.INFOSCREEN:
             self.strong_bullet_info.draw_text()
             self.shield_info.draw_text()
 
