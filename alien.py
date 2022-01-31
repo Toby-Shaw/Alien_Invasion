@@ -2,6 +2,7 @@ from re import L
 import pygame
 from pygame.sprite import Sprite
 from alien_pattern import AlienPattern as AP
+from change_speed_states import ChangeSpeedStates as CSS
 
 class Alien(Sprite):
     """A class to represent a single alien in the fleet"""
@@ -46,34 +47,47 @@ class Alien(Sprite):
     def check_edges(self):
         """Return True if alien is at the edge of screen, or hits other aliens"""
         screen_rect = self.screen.get_rect()
-        if self.rect.right >= screen_rect.right or self.rect.left <= 0:
-            return True
-        if self.ap == AP.THREEROWS:
+        if self.ap == AP.BASIC:
+            if self.rect.right >= screen_rect.right or self.rect.left <= 0:
+                return CSS.ONEGROUP
+        elif self.ap == AP.THREEROWS:
             # Checks for any collisions between any of the groups
             if self in self.ai_game.column1_aliens:
                 if pygame.sprite.spritecollideany(self, self.ai_game.column2_aliens):
                     for alien in self.ai_game.column1_aliens:
-                        alien.rect.x -= self.settings.alien_speed * 1.5
-                    return True
+                        alien.rect.x -= self.settings.alien_speed + 1
+                    return CSS.FIRSTTWO
                 elif pygame.sprite.spritecollideany(self, self.ai_game.column3_aliens):
                     for alien in self.ai_game.column1_aliens:
-                        alien.rect.x -= self.settings.alien_speed * 1.5
-                    return True
+                        alien.rect.x -= self.settings.alien_speed + 1
+                    return CSS.ENDTWO
+                elif self.rect.left <= 0:
+                    for alien in self.ai_game.column1_aliens:
+                        alien.rect.x += self.settings.alien_speed + 1
+                    return CSS.FIRSTCOLUMN
+                elif self.rect.right >= screen_rect.right:
+                    for alien in self.ai_game.column1_aliens:
+                        alien.rect.x -= self.settings.alien_speed + 1
+                    return CSS.FIRSTCOLUMN
             elif self in self.ai_game.column2_aliens:
-                if pygame.sprite.spritecollideany(self, self.ai_game.column1_aliens):
+                if pygame.sprite.spritecollideany(self, self.ai_game.column3_aliens):
                     for alien in self.ai_game.column2_aliens:
-                        alien.rect.x += self.settings.alien_speed * 1.5
-                    return True
-                elif pygame.sprite.spritecollideany(self, self.ai_game.column3_aliens):
+                        alien.rect.x -= self.settings.alien_speed + 1
+                    return CSS.LASTTWO
+                elif self.rect.right >= screen_rect.right:
                     for alien in self.ai_game.column2_aliens:
-                        alien.rect.x -= self.settings.alien_speed * 1.5
-                    return True
+                        alien.rect.x -= self.settings.alien_speed + 1
+                    return CSS.SECONDCOLUMN
+                elif self.rect.left <= 0:
+                    for alien in self.ai_game.column2_aliens:
+                        alien.rect.x += self.settings.alien_speed + 1
+                    return CSS.SECONDCOLUMN
             elif self in self.ai_game.column3_aliens:
-                if pygame.sprite.spritecollideany(self, self.ai_game.column2_aliens):
+                if self.rect.right >= screen_rect.right:
                     for alien in self.ai_game.column3_aliens:
-                        alien.rect.x += self.settings.alien_speed * 1.5
-                    return True
-                elif pygame.sprite.spritecollideany(self, self.ai_game.column1_aliens):
+                        alien.rect.x -= self.settings.alien_speed + 1
+                    return CSS.THIRDCOLUMN
+                elif self.rect.right <= 0:
                     for alien in self.ai_game.column3_aliens:
-                        alien.rect.x += self.settings.alien_speed * 1.5
-                    return True
+                        alien.rect.x += self.settings.alien_speed + 1
+                    return CSS.THIRDCOLUMN

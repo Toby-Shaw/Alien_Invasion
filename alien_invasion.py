@@ -19,6 +19,7 @@ from alien_bullet import AlienBullet
 from shield import WarpShield
 from game_states import GameStates as GS
 from alien_pattern import AlienPattern as AP
+from change_speed_states import ChangeSpeedStates as CSS
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -90,7 +91,7 @@ class AlienInvasion:
         # Start Alien Invasion in an inactive state.
         self.stats.game_layer = GS.MAINMENU
 
-        self.alien_pattern = AP.BASIC
+        self.alien_pattern = AP.THREEROWS
         # Important for new_level final frames
         self.random_flag = 0
 
@@ -351,6 +352,11 @@ class AlienInvasion:
             self.bullets.empty()
             self.alien_bullets.empty()
 
+            # Reset directions
+            self.settings.column1_direction = 1
+            self.settings.column2_direction = -1   
+            self.settings.column3_direction = 1
+
             # Create a new fleet and center the ship.
             self._create_fleet()
             self.ship.center_ship()
@@ -372,7 +378,7 @@ class AlienInvasion:
             # Pause.
             sleep(1)
         else:
-            self.stats.game_layer = 1
+            self.stats.game_layer = GS.MAINMENU
             pygame.mouse.set_visible(True)
 
     def _update_aliens(self):
@@ -407,10 +413,10 @@ class AlienInvasion:
                 # Checks number of bullets, that there is no one in front,
                 # and checks that the alien is alive.
                 if (len(self.alien_bullets) <= self.settings.alien_bullets_allowed
-                    and self._check_in_front(x, self.aliens) and self.alien_list[x] in self.aliens
+                    and self._check_in_front(x, self.aliens) and self.alien_start_list[x] in self.aliens
                     and self.time_since_shot >= 50):
                     self.time_since_shot = 0
-                    new_bullet = AlienBullet(self, self.alien_list[x])
+                    new_bullet = AlienBullet(self, self.alien_start_list[x])
                     self.alien_bullets.add(new_bullet)
         elif self.alien_pattern == AP.THREEROWS:
             # Basically the same setup as before, just with optimized if statements
@@ -420,9 +426,9 @@ class AlienInvasion:
                 for address in self.shooter_alien_addresses:
                     for group in self.three_columns_group:
                         if (self._check_in_front(address, group) and 
-                        self.alien_list[address] in group) and self.time_since_shot >= 50:
+                        self.alien_start_list[address] in group) and self.time_since_shot >= 50:
                             self.time_since_shot = 0
-                            new_bullet = AlienBullet(self, self.alien_list[address])
+                            new_bullet = AlienBullet(self, self.alien_start_list[address])
                             self.alien_bullets.add(new_bullet)
         self.time_since_shot += 1
 
@@ -430,15 +436,15 @@ class AlienInvasion:
         """Check before firing that no aliens in specified group are in front of the shooter"""
         if alien > 26: 
             return True
-        elif alien < 27 and alien > 17 and (self.alien_list[alien + 9] in group):
+        elif alien // 9 == 2 and (self.alien_start_list[alien + 9] in group):
             return False
-        elif alien < 18 and alien > 8:
+        elif alien // 9 == 1:
             for x in range(1, 3):
-                if self.alien_list[alien + 9 * x] in group:
+                if self.alien_start_list[alien + 9 * x] in group:
                     return False
         elif alien < 9:
             for x in range(1, 4):
-                if self.alien_list[alien + 9 * x] in group:
+                if self.alien_start_list[alien + 9 * x] in group:
                     return False
         return True
 
@@ -462,16 +468,12 @@ class AlienInvasion:
         self.time_since_shot = 0
 
         # Created here so each new alien in this mode can be appended
-        if self.alien_pattern == AP.THREEROWS:
-            self.alien_list = []
+        self.alien_start_list = []
 
         # Create the full fleet of aliens.
         for row_number in range(number_rows):
             for alien_number in range(self.number_aliens_x):
                 self._create_alien(alien_number, row_number)
-        # Created here because this command is neater, and works with 1 group
-        if self.alien_pattern == AP.BASIC:
-            self.alien_list = self.aliens.sprites()
 
     def _create_alien(self, alien_number, row_number):
         """Create a alien and place it in the row."""
@@ -488,25 +490,50 @@ class AlienInvasion:
         elif self.alien_pattern == AP.THREEROWS:
             if alien_number < 3:
                 self.column1_aliens.add(alien)
+                #print(f"1: {alien_number + row_number * 9}")
             elif alien_number < 6:
                 self.column2_aliens.add(alien)
+                #print(f"2: {alien_number + row_number * 9}")
             else:
                 self.column3_aliens.add(alien)
-            self.alien_list.append(alien)
+                #print(f"3: {alien_number + row_number * 9}")
+        
+        self.alien_start_list.append(alien)
 
     def _check_fleet_edges(self):
         """Respond if an aliens have reached an edge."""
         if self.alien_pattern == AP.BASIC:
             for alien in self.aliens.sprites():
-                if alien.check_edges():
+                if alien.check_edges() == CSS.ONEGROUP:
                     self._change_fleet_direction()
                     break
         elif self.alien_pattern == AP.THREEROWS:
             for row_group in self.three_columns_group:
                 for alien in row_group:
-                    if alien.check_edges():
-                        self._change_fleet_direction()
-                        break
+                    if alien.check_edges() == CSS.FIRSTCOLUMN:
+                        self.settings.column1_direction *= -1
+                        self._drop_alien_group(self.column1_aliens)
+                    elif alien.check_edges() == CSS.SECONDCOLUMN:
+                        self.settings.column2_direction *= -1
+                        self._drop_alien_group(self.column2_aliens)
+                    elif alien.check_edges() == CSS.THIRDCOLUMN:
+                        self.settings.column3_direction *= -1
+                        self._drop_alien_group(self.column3_aliens)
+                    elif alien.check_edges() == CSS.FIRSTTWO:
+                        self.settings.column1_direction *= -1
+                        self.settings.column2_direction *= -1
+                        self._drop_alien_group(self.column1_aliens)
+                        self._drop_alien_group(self.column2_aliens)
+                    elif alien.check_edges() == CSS.LASTTWO:
+                        self.settings.column2_direction *= -1
+                        self.settings.column3_direction *= -1
+                        self._drop_alien_group(self.column2_aliens)
+                        self._drop_alien_group(self.column3_aliens)
+                    elif alien.check_edges() == CSS.ENDTWO:
+                        self.settings.column1_direction *= -1
+                        self.settings.column3_direction *= -1
+                        self._drop_alien_group(self.column1_aliens)
+                        self._drop_alien_group(self.column3_aliens)
 
     def _check_aliens_bottom(self):
         """Check if any aliens have reached the bottom of the screen"""
@@ -530,15 +557,10 @@ class AlienInvasion:
             self.settings.fleet_direction *= -1
             for alien in self.aliens.sprites():
                 alien.rect.y += self.settings.fleet_drop_speed
-        elif self.alien_pattern == AP.THREEROWS:
-            for group in self.three_columns_group:
-                # Separate speeds allows more flexibility later
-                self.settings.column1_direction *= -1
-                self.settings.column2_direction *= -1
-                self.settings.column3_direction *= -1
-                for alien in group:
-                    # This should be optimized probably
-                    alien.rect.y += self.settings.fleet_drop_speed / 2
+
+    def _drop_alien_group(self, group):
+        for alien in group:
+            alien.rect.y += self.settings.group_drop_speed
         
 
     def _update_play_screen(self):
