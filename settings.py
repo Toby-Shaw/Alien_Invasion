@@ -64,6 +64,10 @@ class Settings:
 
         # fleet_direction of 1 represents right, -1 = left.
         self.fleet_direction = 1
+        # For AP.THREEROWS only
+        self.column1_direction = 1
+        self.column2_direction = -1
+        self.column3_direction = 1
 
         # Scoring
         self.alien_points = 50
