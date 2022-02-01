@@ -274,17 +274,19 @@ class AlienInvasion:
 
     def _check_bullet_alien_collisions(self):
         """Respond to bullet-alien collisions."""
+        self.collision_shell = []
         if self.alien_pattern == AP.BASIC:
             self.collisions = pygame.sprite.groupcollide(
             self.bullets, self.aliens, self.settings.normal_bullet, True)
+            self.collision_shell.append(self.collisions)
         # Have to check collisions for each group separately unfortunately
         elif self.alien_pattern == AP.THREEROWS:
-            for group in self.three_columns_group:
+            for index in range(len(self.three_columns_group)):
                 self.collisions = pygame.sprite.groupcollide(
-                    self.bullets, group, self.settings.normal_bullet, True)
-
-        if self.collisions:
-            for aliens in self.collisions.values():
+                    self.bullets, self.three_columns_group[index], self.settings.normal_bullet, True)
+                self.collision_shell.append(self.collisions)
+        for collision in self.collision_shell:
+            for aliens in collision.values():
                 self.stats.score += self.settings.alien_points * len(aliens)
             self.sb.prep_score()
             self.sb.check_high_score()
@@ -560,8 +562,7 @@ class AlienInvasion:
 
     def _drop_alien_group(self, group):
         for alien in group:
-            alien.rect.y += self.settings.group_drop_speed
-        
+            alien.rect.y += self.settings.group_drop_speed        
 
     def _update_play_screen(self):
         """Draw everything on the play screen"""

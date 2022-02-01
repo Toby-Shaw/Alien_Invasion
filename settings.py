@@ -13,7 +13,7 @@ class Settings:
 
         # Alien settings
         self.fleet_drop_speed = 10
-        self.group_drop_speed = 5
+        self.group_drop_speed = 7
 
         # Initial speed modifier
         self.initial_modifier = 1.1
