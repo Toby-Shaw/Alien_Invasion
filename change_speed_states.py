@@ -1,11 +1,10 @@
 import enum
 
 class ChangeSpeedStates(enum.Enum):
-    ONEGROUP = enum.auto()
-    FIRSTTWO = enum.auto()
-    LASTTWO = enum.auto()
-    ENDTWO = enum.auto()
-    ALLTHREE = enum.auto()
-    FIRSTCOLUMN = enum.auto()
-    SECONDCOLUMN = enum.auto()
-    THIRDCOLUMN = enum.auto()
+    ONEGROUP = (0, 1 ,2)
+    FIRSTTWO = (0, 1)
+    LASTTWO = (1, 2)
+    ENDTWO = (0, 2)
+    FIRSTCOLUMN = (0,)
+    SECONDCOLUMN = (1,)
+    THIRDCOLUMN = (2,)

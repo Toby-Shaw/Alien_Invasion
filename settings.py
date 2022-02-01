@@ -69,6 +69,7 @@ class Settings:
         self.column1_direction = 1
         self.column2_direction = -1
         self.column3_direction = 1
+        self.column_direction_list = [self.column1_direction, self.column2_direction, self.column3_direction]
 
         # Scoring
         self.alien_points = 50

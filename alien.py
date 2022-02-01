@@ -35,13 +35,13 @@ class Alien(Sprite):
         elif self.ap == AP.THREEROWS:
             if self in self.ai_game.column1_aliens:
                 self.x += (self.settings.alien_speed
-                         * self.settings.column1_direction)
+                         * self.settings.column_direction_list[0])
             elif self in self.ai_game.column2_aliens:
                 self.x += (self.settings.alien_speed *
-                        self.settings.column2_direction)
+                        self.settings.column_direction_list[1])
             elif self in self.ai_game.column3_aliens:
                 self.x += (self.settings.alien_speed *
-                        self.settings.column3_direction)
+                        self.settings.column_direction_list[2])
         self.rect.x = self.x
     
     def check_edges(self):
@@ -91,3 +91,5 @@ class Alien(Sprite):
                     for alien in self.ai_game.column3_aliens:
                         alien.rect.x += self.settings.alien_speed + 1
                     return CSS.THIRDCOLUMN
+
+                    

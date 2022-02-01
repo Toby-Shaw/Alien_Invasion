@@ -513,29 +513,26 @@ class AlienInvasion:
             for row_group in self.three_columns_group:
                 for alien in row_group:
                     if alien.check_edges() == CSS.FIRSTCOLUMN:
-                        self.settings.column1_direction *= -1
+                        self.settings.column_direction_list[0] *= -1
                         self._drop_alien_group(self.column1_aliens)
                     elif alien.check_edges() == CSS.SECONDCOLUMN:
-                        self.settings.column2_direction *= -1
+                        self.settings.column_direction_list[1] *= -1
                         self._drop_alien_group(self.column2_aliens)
                     elif alien.check_edges() == CSS.THIRDCOLUMN:
-                        self.settings.column3_direction *= -1
+                        self.settings.column_direction_list[2] *= -1
                         self._drop_alien_group(self.column3_aliens)
                     elif alien.check_edges() == CSS.FIRSTTWO:
-                        self.settings.column1_direction *= -1
-                        self.settings.column2_direction *= -1
-                        self._drop_alien_group(self.column1_aliens)
-                        self._drop_alien_group(self.column2_aliens)
+                        for blank in CSS.FIRSTTWO._value_:
+                            self.settings.column_direction_list[blank] *= -1
+                            self._drop_alien_group(self.three_columns_group[blank])
                     elif alien.check_edges() == CSS.LASTTWO:
-                        self.settings.column2_direction *= -1
-                        self.settings.column3_direction *= -1
-                        self._drop_alien_group(self.column2_aliens)
-                        self._drop_alien_group(self.column3_aliens)
+                        for blank in CSS.LASTTWO._value_:
+                            self.settings.column_direction_list[blank] *= -1
+                            self._drop_alien_group(self.three_columns_group[blank])
                     elif alien.check_edges() == CSS.ENDTWO:
-                        self.settings.column1_direction *= -1
-                        self.settings.column3_direction *= -1
-                        self._drop_alien_group(self.column1_aliens)
-                        self._drop_alien_group(self.column3_aliens)
+                        for blank in CSS.ENDTWO._value_:
+                            self.settings.column_direction_list[blank] *= -1
+                            self._drop_alien_group(self.three_columns_group[blank])
 
     def _check_aliens_bottom(self):
         """Check if any aliens have reached the bottom of the screen"""
