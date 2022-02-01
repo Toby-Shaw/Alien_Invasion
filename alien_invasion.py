@@ -138,7 +138,7 @@ class AlienInvasion:
         """Respond to keypresses and mouse events."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                high_score = open("high_score.txt", "w")
+                high_score = open("Games/Alien_Invasion/high_score.txt", "w")
                 high_score.write(str(self.stats.high_score))
                 sys.exit()
             elif event.type == pygame.KEYDOWN:
@@ -332,6 +332,12 @@ class AlienInvasion:
         self.warp_square._reset_cooldown()
         self.settings.warp_up = False
 
+        # Reset speeds sometimes
+        if random.randint(1, 2) == 2:
+            self.settings.column_direction_list[0] = 1
+            self.settings.column_direction_list[1] = -1
+            self.settings.column_direction_list[2] = 1
+
         # Increase level
         self.stats.level += 1
         self.sb.prep_level()
@@ -355,9 +361,9 @@ class AlienInvasion:
             self.alien_bullets.empty()
 
             # Reset directions
-            self.settings.column1_direction = 1
-            self.settings.column2_direction = -1   
-            self.settings.column3_direction = 1
+            self.settings.column_direction_list[0] = 1
+            self.settings.column_direction_list[1] = -1   
+            self.settings.column_direction_list[2] = 1
 
             # Create a new fleet and center the ship.
             self._create_fleet()

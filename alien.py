@@ -87,7 +87,7 @@ class Alien(Sprite):
                     for alien in self.ai_game.column3_aliens:
                         alien.rect.x -= self.settings.alien_speed + 1
                     return CSS.THIRDCOLUMN
-                elif self.rect.right <= 0:
+                elif self.rect.left <= 0:
                     for alien in self.ai_game.column3_aliens:
                         alien.rect.x += self.settings.alien_speed + 1
                     return CSS.THIRDCOLUMN
