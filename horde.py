@@ -1,0 +1,213 @@
+import pygame
+import random
+from alien import Alien
+from alien_bullet import AlienBullet
+from alien_pattern import AlienPattern as AP
+from change_speed_states import ChangeSpeedStates as CSS
+
+class Horde:
+    """A class to handle all alien methods and things"""
+    def __init__(self, ai_game):
+        self.screen = ai_game.screen
+        self.settings = ai_game.settings
+        self.alien_pattern = ai_game.alien_pattern
+        self.ship = ai_game.ship
+        self.ai_game = ai_game
+
+        self.aliens = pygame.sprite.Group()
+        # for AP.THREEROWS only
+        self.column1_aliens = pygame.sprite.Group()
+        self.column2_aliens = pygame.sprite.Group()
+        self.column3_aliens = pygame.sprite.Group()
+        self.three_columns_group = [self.column1_aliens, self.column2_aliens, self.column3_aliens]
+        # Alien bullet group
+        self.alien_bullets = pygame.sprite.Group()
+    
+    def _update_aliens(self):
+        """
+        Check if the fleet is at an edge, 
+          then update the positions of all aliens in the fleet.
+        """
+        if self.alien_pattern == AP.BASIC:
+            self.aliens.update()
+            # Look for alien-ship collisions.
+            if pygame.sprite.spritecollideany(self.ship, self.aliens):
+                self._ship_hit()
+        elif self.alien_pattern == AP.THREEROWS:
+            for group in self.three_columns_group:
+                group.update()
+                if pygame.sprite.spritecollideany(self.ship, group):
+                    self.ai_game._ship_hit()
+        # Hopefully having these after will prevent odd fleet down movement
+        self._check_fleet_edges()
+        self._check_aliens_bottom()
+        if pygame.sprite.spritecollideany(self.ship, self.alien_bullets):
+            self.ai_game._ship_hit()
+
+        # Fire the shooter aliens if needed.
+        self._fire_shooter_aliens()
+        
+    def _fire_shooter_aliens(self):
+        """Have one alien shoot at any one time, earlier list address favored"""
+        # Runs through every shooter alien address
+        if self.alien_pattern == AP.BASIC:
+            for x in self.shooter_alien_addresses:
+                # Checks number of bullets, that there is no one in front,
+                # and checks that the alien is alive.
+                if (len(self.alien_bullets) <= self.settings.alien_bullets_allowed
+                    and self._check_in_front(x, self.aliens) and self.alien_start_list[x] in self.aliens
+                    and self.time_since_shot >= 50):
+                    self.time_since_shot = 0
+                    new_bullet = AlienBullet(self, self.alien_start_list[x])
+                    self.alien_bullets.add(new_bullet)
+        elif self.alien_pattern == AP.THREEROWS:
+            # Basically the same setup as before, just with optimized if statements
+            # and accounting for checking through several groups
+            # If using rows instead of columns, this will not work
+            if (len(self.alien_bullets) <= self.settings.alien_bullets_allowed):
+                for address in self.shooter_alien_addresses:
+                    for group in self.three_columns_group:
+                        if (self._check_in_front(address, group) and 
+                        self.alien_start_list[address] in group) and self.time_since_shot >= 50:
+                            self.time_since_shot = 0
+                            new_bullet = AlienBullet(self, self.alien_start_list[address])
+                            self.alien_bullets.add(new_bullet)
+        self.time_since_shot += 1
+    
+    def _update_alien_bullets(self):
+        """Update alien bullets and get rid of out of bounds ones."""
+        # Update their position
+        self.alien_bullets.update()
+
+        # If out of bounds, delete the bullet
+        for bullet in self.alien_bullets.copy():
+            if bullet.rect.top >= self.settings.screen_height - 20:
+                self.alien_bullets.remove(bullet)
+
+    def _check_in_front(self, alien, group):
+        """Check before firing that no aliens in specified group are in front of the shooter"""
+        if alien > 26: 
+            return True
+        elif alien // 9 == 2 and (self.alien_start_list[alien + 9] in group):
+            return False
+        elif alien // 9 == 1:
+            for x in range(1, 3):
+                if self.alien_start_list[alien + 9 * x] in group:
+                    return False
+        elif alien < 9:
+            for x in range(1, 4):
+                if self.alien_start_list[alien + 9 * x] in group:
+                    return False
+        return True
+
+    def _create_fleet(self):
+        """Create the fleet of aliens"""
+        # Make an alien and find the number of aliens in a row
+        # Spacing between each alien is equal to one alien width
+        alien = Alien(self)
+        alien_width, alien_height = alien.rect.size
+        available_space_x = self.settings.screen_width - (2 * alien_width)
+        self.number_aliens_x = available_space_x // (2 * alien_width)
+
+        # Determine the number of rows of aliens that fit on the screen.
+        ship_height = self.ship.rect.height
+        available_space_y = (self.settings.screen_height -
+                    (3 * alien_height) - ship_height)
+        number_rows = available_space_y // (2 * alien_height)
+
+        # Create the list of potential shooter aliens/addresses
+        self.shooter_alien_addresses = []
+        self.time_since_shot = 0
+
+        # Created here so each new alien in this mode can be appended
+        self.alien_start_list = []
+
+        # Create the full fleet of aliens.
+        for row_number in range(number_rows):
+            for alien_number in range(self.number_aliens_x):
+                self._create_alien(alien_number, row_number)
+
+    def _create_alien(self, alien_number, row_number):
+        """Create a alien and place it in the row."""
+        alien = Alien(self)
+        alien_width, alien_height = alien.rect.size
+        alien.x = alien_width + 2 * alien_width * alien_number
+        alien.rect.x = alien.x
+        alien.rect.y = alien_height + 2 * alien.rect.height * row_number
+        # 1 in 3 aliens are a shooter alien
+        if random.randint(1, 3) == 3:
+            self.shooter_alien_addresses.append(alien_number + row_number * 9)
+        if self.alien_pattern == AP.BASIC:
+            self.aliens.add(alien)
+        elif self.alien_pattern == AP.THREEROWS:
+            if alien_number < 3:
+                self.column1_aliens.add(alien)
+                #print(f"1: {alien_number + row_number * 9}")
+            elif alien_number < 6:
+                self.column2_aliens.add(alien)
+                #print(f"2: {alien_number + row_number * 9}")
+            else:
+                self.column3_aliens.add(alien)
+                #print(f"3: {alien_number + row_number * 9}")
+        
+        self.alien_start_list.append(alien)
+
+    def _check_fleet_edges(self):
+        """Respond if an aliens have reached an edge."""
+        if self.alien_pattern == AP.BASIC:
+            for alien in self.aliens.sprites():
+                if alien.check_edges() == CSS.ONEGROUP:
+                    self._change_fleet_direction()
+                    break
+        elif self.alien_pattern == AP.THREEROWS:
+            for row_group in self.three_columns_group:
+                for alien in row_group:
+                    if alien.check_edges() == CSS.FIRSTCOLUMN:
+                        self.settings.column_direction_list[0] *= -1
+                        self._drop_alien_group(self.column1_aliens)
+                    elif alien.check_edges() == CSS.SECONDCOLUMN:
+                        self.settings.column_direction_list[1] *= -1
+                        self._drop_alien_group(self.column2_aliens)
+                    elif alien.check_edges() == CSS.THIRDCOLUMN:
+                        self.settings.column_direction_list[2] *= -1
+                        self._drop_alien_group(self.column3_aliens)
+                    elif alien.check_edges() == CSS.FIRSTTWO:
+                        for blank in CSS.FIRSTTWO._value_:
+                            self.settings.column_direction_list[blank] *= -1
+                            self._drop_alien_group(self.three_columns_group[blank])
+                    elif alien.check_edges() == CSS.LASTTWO:
+                        for blank in CSS.LASTTWO._value_:
+                            self.settings.column_direction_list[blank] *= -1
+                            self._drop_alien_group(self.three_columns_group[blank])
+                    elif alien.check_edges() == CSS.ENDTWO:
+                        for blank in CSS.ENDTWO._value_:
+                            self.settings.column_direction_list[blank] *= -1
+                            self._drop_alien_group(self.three_columns_group[blank])
+
+    def _check_aliens_bottom(self):
+        """Check if any aliens have reached the bottom of the screen"""
+        screen_rect = self.screen.get_rect()
+        if self.alien_pattern == AP.BASIC:
+            for alien in self.aliens.sprites():
+                if alien.rect.bottom >= screen_rect.bottom:
+                    # Treat it as if a ship got hit.
+                    self.ai_game._ship_hit()
+                    break
+        elif self.alien_pattern == AP.THREEROWS:
+            for group in self.three_columns_group:
+                for alien in group:
+                    if alien.rect.bottom >= screen_rect.bottom:
+                        self.ai_game._ship_hit()
+                        break
+
+    def _change_fleet_direction(self):
+        """Drop the entire fleet and change the fleet's direction."""
+        if self.alien_pattern == AP.BASIC:
+            self.settings.fleet_direction *= -1
+            for alien in self.aliens.sprites():
+                alien.rect.y += self.settings.fleet_drop_speed
+
+    def _drop_alien_group(self, group):
+        """For more selective dropping of groups"""
+        for alien in group:
+            alien.rect.y += self.settings.group_drop_speed
