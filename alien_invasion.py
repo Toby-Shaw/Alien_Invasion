@@ -9,17 +9,14 @@ import pygame
 from settings import Settings
 from ship import Ship
 from bullet import Bullet
-from alien import Alien
 from game_stats import Gamestats
 from button import Button
 from scoreboard import Scoreboard
 from ability_square import AbilityButton
 from text import Text
-from alien_bullet import AlienBullet
 from shield import WarpShield
 from game_states import GameStates as GS
 from alien_pattern import AlienPattern as AP
-from change_speed_states import ChangeSpeedStates as CSS
 from horde import Horde
 
 class AlienInvasion:
@@ -84,6 +81,7 @@ class AlienInvasion:
 
         # Start Alien Invasion in an inactive state.
         self.stats.game_layer = GS.MAINMENU
+        self.cheats = False
 
         # Important for new_level final frames
         self.random_flag = 0
@@ -175,6 +173,8 @@ class AlienInvasion:
                 self._start_game()
             elif self.stats.game_layer == GS.PLAYSCREEN:
                 self._fire_bullet()
+            elif self.stats.game_layer == GS.PAUSEMENU:
+                self.stats.game_layer = GS.PLAYSCREEN
         elif event.key == pygame.K_p:
             if self.stats.game_layer == GS.MAINMENU:
                 self._start_game()
@@ -188,7 +188,7 @@ class AlienInvasion:
                 self.warp_square.covering = True
         elif event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
             self._check_escape_events()
-        elif event.key == pygame.K_b:
+        elif event.key == pygame.K_b and self.cheats == True:
             for group in self.horde.three_columns_group:
                 group.empty()
 

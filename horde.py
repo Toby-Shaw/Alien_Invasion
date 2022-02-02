@@ -81,7 +81,7 @@ class Horde:
 
         # If out of bounds, delete the bullet
         for bullet in self.alien_bullets.copy():
-            if bullet.rect.top >= self.settings.screen_height - 20:
+            if bullet.rect.top >= self.settings.screen_height - 35:
                 self.alien_bullets.remove(bullet)
 
     def _check_in_front(self, alien, group):
@@ -165,24 +165,45 @@ class Horde:
                     if alien.check_edges() == CSS.FIRSTCOLUMN:
                         self.settings.column_direction_list[0] *= -1
                         self._drop_alien_group(self.column1_aliens)
+                        break
                     elif alien.check_edges() == CSS.SECONDCOLUMN:
                         self.settings.column_direction_list[1] *= -1
                         self._drop_alien_group(self.column2_aliens)
+                        break
                     elif alien.check_edges() == CSS.THIRDCOLUMN:
                         self.settings.column_direction_list[2] *= -1
                         self._drop_alien_group(self.column3_aliens)
+                        break
                     elif alien.check_edges() == CSS.FIRSTTWO:
                         for blank in CSS.FIRSTTWO._value_:
                             self.settings.column_direction_list[blank] *= -1
                             self._drop_alien_group(self.three_columns_group[blank])
+                        for alien in self.column1_aliens:
+                            alien.rect.x -= self.settings.alien_speed
+                        for alien in self.column2_aliens:
+                            alien.rect.x += self.settings.alien_speed
+                        #print("F2 Hit!")
+                        break
                     elif alien.check_edges() == CSS.LASTTWO:
                         for blank in CSS.LASTTWO._value_:
                             self.settings.column_direction_list[blank] *= -1
                             self._drop_alien_group(self.three_columns_group[blank])
+                        for alien in self.column2_aliens:
+                            alien.rect.x -= self.settings.alien_speed
+                        for alien in self.column3_aliens:
+                            alien.rect.x += self.settings.alien_speed
+                        #print("L2 Hit!")
+                        break
                     elif alien.check_edges() == CSS.ENDTWO:
                         for blank in CSS.ENDTWO._value_:
                             self.settings.column_direction_list[blank] *= -1
                             self._drop_alien_group(self.three_columns_group[blank])
+                        for alien in self.column1_aliens:
+                            alien.rect.x -= self.settings.alien_speed
+                        for alien in self.column3_aliens:
+                            alien.rect.x += self.settings.alien_speed
+                        #print("E2 Hit")
+                        break
 
     def _check_aliens_bottom(self):
         """Check if any aliens have reached the bottom of the screen"""

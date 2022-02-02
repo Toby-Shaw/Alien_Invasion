@@ -54,14 +54,8 @@ class Alien(Sprite):
             # Checks for any collisions between any of the groups
             if self in self.ai_game.column1_aliens:
                 if pygame.sprite.spritecollideany(self, self.ai_game.column2_aliens):
-                    for alien in self.ai_game.column1_aliens:
-                        alien.rect.x -= self.settings.alien_speed + 1
-                    #print("F2 Hit!")
                     return CSS.FIRSTTWO
                 elif pygame.sprite.spritecollideany(self, self.ai_game.column3_aliens):
-                    for alien in self.ai_game.column1_aliens:
-                        alien.rect.x -= self.settings.alien_speed + 1
-                    #print("E2 Hit!")
                     return CSS.ENDTWO
                 elif self.rect.left <= 0:
                     for alien in self.ai_game.column1_aliens:
@@ -73,9 +67,6 @@ class Alien(Sprite):
                     return CSS.FIRSTCOLUMN
             elif self in self.ai_game.column2_aliens:
                 if pygame.sprite.spritecollideany(self, self.ai_game.column3_aliens):
-                    for alien in self.ai_game.column2_aliens:
-                        alien.rect.x -= self.settings.alien_speed + 1
-                    #print("L2 Hit!")
                     return CSS.LASTTWO
                 elif self.rect.right >= screen_rect.right:
                     for alien in self.ai_game.column2_aliens:
