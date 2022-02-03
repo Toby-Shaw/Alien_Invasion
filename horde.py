@@ -3,7 +3,7 @@ import random
 from alien import Alien
 from alien_bullet import AlienBullet
 from alien_pattern import AlienPattern as AP
-from change_speed_states import ChangeSpeedStates as CSS
+from collisions_states import CollisionsStates as CS
 
 class Horde:
     """A class to handle all alien methods and things"""
@@ -20,6 +20,11 @@ class Horde:
         self.column2_aliens = pygame.sprite.Group()
         self.column3_aliens = pygame.sprite.Group()
         self.three_columns_group = [self.column1_aliens, self.column2_aliens, self.column3_aliens]
+        self.single_column_states_left = [CS.FIRSTCOLUMNLEFT, 
+                                        CS.SECONDCOLUMNLEFT, CS.THIRDCOLUMNLEFT]
+        self.single_column_states_right = [CS.FIRSTCOLUMNRIGHT, 
+                                        CS.SECONDCOLUMNRIGHT, CS.THIRDCOLUMNRIGHT]
+        self.collision_column_list = [CS.FIRSTTWO, CS.LASTTWO, CS.ENDTWO]
         # Alien bullet group
         self.alien_bullets = pygame.sprite.Group()
     
@@ -153,57 +158,46 @@ class Horde:
         self.alien_start_list.append(alien)
 
     def _check_fleet_edges(self):
-        """Respond if an aliens have reached an edge."""
+        """Respond if aliens have reached an edge."""
         if self.alien_pattern == AP.BASIC:
             for alien in self.aliens.sprites():
-                if alien.check_edges() == CSS.ONEGROUP:
+                if alien.check_edges() == CS.ONEGROUP:
                     self._change_fleet_direction()
                     break
         elif self.alien_pattern == AP.THREEROWS:
             for row_group in self.three_columns_group:
                 for alien in row_group:
-                    if alien.check_edges() == CSS.FIRSTCOLUMN:
-                        self.settings.column_direction_list[0] *= -1
-                        self._drop_alien_group(self.column1_aliens)
-                        break
-                    elif alien.check_edges() == CSS.SECONDCOLUMN:
-                        self.settings.column_direction_list[1] *= -1
-                        self._drop_alien_group(self.column2_aliens)
-                        break
-                    elif alien.check_edges() == CSS.THIRDCOLUMN:
-                        self.settings.column_direction_list[2] *= -1
-                        self._drop_alien_group(self.column3_aliens)
-                        break
-                    elif alien.check_edges() == CSS.FIRSTTWO:
-                        for blank in CSS.FIRSTTWO._value_:
-                            self.settings.column_direction_list[blank] *= -1
-                            self._drop_alien_group(self.three_columns_group[blank])
-                        for alien in self.column1_aliens:
-                            alien.rect.x -= self.settings.alien_speed
-                        for alien in self.column2_aliens:
-                            alien.rect.x += self.settings.alien_speed
-                        #print("F2 Hit!")
-                        break
-                    elif alien.check_edges() == CSS.LASTTWO:
-                        for blank in CSS.LASTTWO._value_:
-                            self.settings.column_direction_list[blank] *= -1
-                            self._drop_alien_group(self.three_columns_group[blank])
-                        for alien in self.column2_aliens:
-                            alien.rect.x -= self.settings.alien_speed
-                        for alien in self.column3_aliens:
-                            alien.rect.x += self.settings.alien_speed
-                        #print("L2 Hit!")
-                        break
-                    elif alien.check_edges() == CSS.ENDTWO:
-                        for blank in CSS.ENDTWO._value_:
-                            self.settings.column_direction_list[blank] *= -1
-                            self._drop_alien_group(self.three_columns_group[blank])
-                        for alien in self.column1_aliens:
-                            alien.rect.x -= self.settings.alien_speed
-                        for alien in self.column3_aliens:
-                            alien.rect.x += self.settings.alien_speed
-                        #print("E2 Hit")
-                        break
+                    check = alien.check_edges()
+                    if check in self.single_column_states_right or check in self.single_column_states_left:
+                        self._single_column_actions(check)
+                    elif check in self.collision_column_list:
+                        self._colliding_columns_actions(check)
+
+    def _single_column_actions(self, check):
+        """Respond if a column hits the edge of the screen"""
+        check_value = check._value_[0]
+        self.settings.column_direction_list[check_value] *= -1
+        self._drop_alien_group(self.three_columns_group[check_value])
+        if check in self.single_column_states_left:
+            for alien in self.three_columns_group[check_value]:
+                alien.x += self.settings.alien_speed
+                alien.rect.x = alien.x
+        elif check in self.single_column_states_right:
+            for alien in self.three_columns_group[check_value]:
+                alien.x -= self.settings.alien_speed
+                alien.rect.x = alien.x
+
+    def _colliding_columns_actions(self, check):
+        """Respond if columns collide"""
+        for column in check._value_:
+            self.settings.column_direction_list[column] *= -1
+            self._drop_alien_group(self.three_columns_group[column])
+            for alien in self.three_columns_group[column]:
+                if column == check._value_[0]:
+                    alien.x -= self.settings.alien_speed
+                elif column == check._value_[1]:
+                    alien.x += self.settings.alien_speed
+                alien.rect.x = alien.x
 
     def _check_aliens_bottom(self):
         """Check if any aliens have reached the bottom of the screen"""

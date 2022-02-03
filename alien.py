@@ -1,8 +1,7 @@
-from re import L
 import pygame
 from pygame.sprite import Sprite
 from alien_pattern import AlienPattern as AP
-from change_speed_states import ChangeSpeedStates as CSS
+from collisions_states import CollisionsStates as CS
 
 class Alien(Sprite):
     """A class to represent a single alien in the fleet"""
@@ -49,41 +48,29 @@ class Alien(Sprite):
         screen_rect = self.screen.get_rect()
         if self.ap == AP.BASIC:
             if self.rect.right >= screen_rect.right or self.rect.left <= 0:
-                return CSS.ONEGROUP
+                return CS.ONEGROUP
         elif self.ap == AP.THREEROWS:
             # Checks for any collisions between any of the groups
             if self in self.ai_game.column1_aliens:
                 if pygame.sprite.spritecollideany(self, self.ai_game.column2_aliens):
-                    return CSS.FIRSTTWO
+                    return CS.FIRSTTWO
                 elif pygame.sprite.spritecollideany(self, self.ai_game.column3_aliens):
-                    return CSS.ENDTWO
+                    return CS.ENDTWO
                 elif self.rect.left <= 0:
-                    for alien in self.ai_game.column1_aliens:
-                        alien.rect.x += self.settings.alien_speed + 1
-                    return CSS.FIRSTCOLUMN
+                    return CS.FIRSTCOLUMNLEFT
                 elif self.rect.right >= screen_rect.right:
-                    for alien in self.ai_game.column1_aliens:
-                        alien.rect.x -= self.settings.alien_speed + 1
-                    return CSS.FIRSTCOLUMN
+                    return CS.FIRSTCOLUMNRIGHT
             elif self in self.ai_game.column2_aliens:
                 if pygame.sprite.spritecollideany(self, self.ai_game.column3_aliens):
-                    return CSS.LASTTWO
+                    return CS.LASTTWO
                 elif self.rect.right >= screen_rect.right:
-                    for alien in self.ai_game.column2_aliens:
-                        alien.rect.x -= self.settings.alien_speed + 1
-                    return CSS.SECONDCOLUMN
+                    return CS.SECONDCOLUMNRIGHT
                 elif self.rect.left <= 0:
-                    for alien in self.ai_game.column2_aliens:
-                        alien.rect.x += self.settings.alien_speed + 1
-                    return CSS.SECONDCOLUMN
+                    return CS.SECONDCOLUMNLEFT
             elif self in self.ai_game.column3_aliens:
                 if self.rect.right >= screen_rect.right:
-                    for alien in self.ai_game.column3_aliens:
-                        alien.rect.x -= self.settings.alien_speed + 1
-                    return CSS.THIRDCOLUMN
+                    return CS.THIRDCOLUMNRIGHT
                 elif self.rect.left <= 0:
-                    for alien in self.ai_game.column3_aliens:
-                        alien.rect.x += self.settings.alien_speed + 1
-                    return CSS.THIRDCOLUMN
+                    return CS.THIRDCOLUMNLEFT
 
                     
