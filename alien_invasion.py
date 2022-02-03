@@ -57,6 +57,8 @@ class AlienInvasion:
             (self.settings.screen_width / 2), 180)
         self.pause = Text(self, "Paused", 110, (0, 255, 0),
             (self.settings.screen_width / 2), 180)
+        self.game_over = Text(self, "Game Over", 170, (0, 255, 0),
+            (self.settings.screen_width / 2), 270)
 
         # Make the Information text pieces
         self.strong_bullet_info = Text(self, 
@@ -140,6 +142,7 @@ class AlienInvasion:
                 mouse_pos = pygame.mouse.get_pos()
                 self._check_main_buttons(mouse_pos)
                 self._check_pause_buttons(mouse_pos)
+                self._check_over_buttons(mouse_pos)
                 
     def _check_main_buttons(self, mouse_pos):
         """Check the main screen buttons"""
@@ -161,6 +164,13 @@ class AlienInvasion:
             elif self.resume.rect.collidepoint(mouse_pos):
                 # Return to the game if clicked
                 self.stats.game_layer = GS.PLAYSCREEN
+                pygame.mouse.set_visible(False)
+
+    def _check_over_buttons(self, mouse_pos):
+        """Check end screen buttons"""
+        if self.stats.game_layer == GS.ENDSCREEN:
+            if self.main_menu.rect.collidepoint(mouse_pos):
+                self.stats.game_layer = GS.MAINMENU
 
     def _check_keydown_events(self, event):
         """Respond to keypresses"""
@@ -204,7 +214,7 @@ class AlienInvasion:
             high_score.write(str(self.stats.high_score))
             self.stats.game_layer = GS.MAINMENU
             pygame.mouse.set_visible(True)
-        elif self.stats.game_layer == GS.INFOSCREEN:
+        elif self.stats.game_layer == GS.INFOSCREEN or self.stats.game_layer == GS.ENDSCREEN:
             # Go back to the main menu
             self.stats.game_layer = GS.MAINMENU
         else:
@@ -372,7 +382,7 @@ class AlienInvasion:
             # Pause.
             sleep(1)
         else:
-            self.stats.game_layer = GS.MAINMENU
+            self.stats.game_layer = GS.ENDSCREEN
             pygame.mouse.set_visible(True)
 
     def _update_play_screen(self):
@@ -418,6 +428,10 @@ class AlienInvasion:
         elif self.stats.game_layer == GS.INFOSCREEN:
             self.strong_bullet_info.draw_text()
             self.shield_info.draw_text()
+
+        elif self.stats.game_layer == GS.ENDSCREEN:
+            self.main_menu.draw_button()
+            self.game_over.draw_text()
 
         # Draw the fps screen on every screen
         self.fps_meter.draw_text()
