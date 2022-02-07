@@ -20,12 +20,14 @@ from shield import WarpShield
 from game_states import GameStates as GS
 from alien_pattern import AlienPattern as AP
 from horde import Horde
+from game_sounds import GameSounds
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
 
     def __init__(self):
         """Initialize the game, and create game resources."""
+        pygame.mixer.init()
         pygame.init()
         self.settings = Settings()
         self.screen = pygame.display.set_mode(
@@ -88,21 +90,7 @@ class AlienInvasion:
         self.cheats = False
 
         # Music
-        music.load("Games/Alien_Invasion/Music/cinematic-space-drone-10623.mp3")
-        music.set_volume(0.5)
-        music.play()
-        self.shield_hit = Sound("Games/Alien_Invasion/Music/shield_hit.mp3")
-        self.shield_hit.set_volume(0.5)
-        self.shield_up = Sound("Games/Alien_Invasion/Music/shield_up.mp3")
-        self.shield_up.set_volume(0.5)
-        self.start_sound = Sound("Games/Alien_Invasion/Music/Start_sound.mp3")
-        self.start_sound.set_volume(0.7)
-        self.strong_start = Sound("Games/Alien_Invasion/Music/strong_bullet_up.mp3")
-        self.start_sound.set_volume(0.4)
-        self.bullet_fired = Sound("Games/Alien_Invasion/Music/bullet_fired.mp3")
-        self.bullet_fired.set_volume(0.5)
-        self.ship_hit = Sound("Games/Alien_Invasion/Music/ship_hit.mp3")
-
+        self.game_sounds = GameSounds()
         # Important for new_level final frames
         self.random_flag = 0
 
@@ -129,7 +117,7 @@ class AlienInvasion:
         self.sb.prep_score()
         self.sb.prep_level()
         self.sb.prep_ships()
-        self.start_sound.play()
+        self.game_sounds.sound_channel.play(self.game_sounds.start_sound)
 
         # Get rid of any remaining aliens and bullets.
         self.horde.aliens.empty()
@@ -202,7 +190,7 @@ class AlienInvasion:
             if self.stats.game_layer == GS.MAINMENU:
                 self._start_game()
             elif self.stats.game_layer == GS.PLAYSCREEN:
-                self.bullet_fired.play(0, 500)
+                self.game_sounds.sound_channel.play(self.game_sounds.bullet_fired, 0, 500)
                 self._fire_bullet()
             elif self.stats.game_layer == GS.PAUSEMENU:
                 self.stats.game_layer = GS.PLAYSCREEN
@@ -211,12 +199,12 @@ class AlienInvasion:
                 self._start_game()
         elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
             if self.settings.normal_bullet and self.strong_bullet_square.cooldown_up:
-                self.strong_start.play(0, 550)
+                self.game_sounds.sound_channel.play(self.game_sounds.strong_start, 0, 550)
                 self.settings.strong_bullet()
                 self.strong_bullet_square.covering = True
         elif event.key == pygame.K_UP or event.key == pygame.K_w:
             if not self.settings.warp_up and self.warp_square.cooldown_up:
-                Sound.play(self.shield_up)
+                self.game_sounds.sound_channel.play(self.game_sounds.shield_up)
                 self.settings.warp_up = True
                 self.warp_square.covering = True
         elif event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
@@ -333,7 +321,7 @@ class AlienInvasion:
         """Respond to shield-shooter alien collisions."""
         if (pygame.sprite.spritecollide(self.warp_shield, self.horde.alien_bullets, self.settings.warp_up)
             and self.settings.warp_up):
-            Sound.play(self.shield_hit, 0, 200, 200)
+            self.game_sounds.sound_channel.play(self.game_sounds.shield_hit, 0 , 200, 200)
             self.settings.shield_hits += 1
             # If the shield has been hit too many times, start cooldown + it's broken
             if self.settings.shield_hits >= self.settings.allowed_hits:
@@ -368,7 +356,7 @@ class AlienInvasion:
 
     def _ship_hit(self):
         """Respond to the ship being hit by alien"""
-        self.ship_hit.play()
+        self.game_sounds.sound_channel.play(self.game_sounds.ship_hit)
         if self.stats.ships_left > 0:
             # Decrement ships left, and update graphics.
             self.stats.ships_left -= 1
