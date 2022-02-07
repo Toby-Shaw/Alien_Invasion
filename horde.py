@@ -147,14 +147,10 @@ class Horde:
         elif self.alien_pattern == AP.THREEROWS:
             if alien_number < 3:
                 self.column1_aliens.add(alien)
-                #print(f"1: {alien_number + row_number * 9}")
             elif alien_number < 6:
                 self.column2_aliens.add(alien)
-                #print(f"2: {alien_number + row_number * 9}")
             else:
                 self.column3_aliens.add(alien)
-                #print(f"3: {alien_number + row_number * 9}")
-        
         self.alien_start_list.append(alien)
 
     def _check_fleet_edges(self):

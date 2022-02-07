@@ -36,11 +36,6 @@ class Text:
             rect.centery = self.posy + (line_spacing * counter)
             counter += 1
 
-        """self.text_image = self.font.render(text, True, self.font_color, self.settings.bg_color)
-        self.text_image_rect = self.text_image.get_rect()
-        self.text_image_rect.centerx = self.posx
-        self.text_image_rect.centery = self.posy"""
-
     def draw_text(self):
         "Draw the text onto the screen"
         for i in range(len(self.text_list)):

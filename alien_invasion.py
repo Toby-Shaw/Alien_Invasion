@@ -5,8 +5,6 @@ import random
 import os
 
 import pygame
-from pygame.mixer import music
-from pygame.mixer import Sound
 
 from settings import Settings
 from ship import Ship
@@ -408,9 +406,8 @@ class AlienInvasion:
         if self.alien_pattern == AP.BASIC:
             self.horde.aliens.draw(self.screen)
         elif self.alien_pattern == AP.THREEROWS:
-            self.horde.column1_aliens.draw(self.screen)
-            self.horde.column2_aliens.draw(self.screen)
-            self.horde.column3_aliens.draw(self.screen)
+            for group in self.horde.three_columns_group:
+                group.draw(self.screen)
 
         # Draw the score info and ability squares
         self.sb.show_score()
