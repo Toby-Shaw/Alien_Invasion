@@ -6,18 +6,18 @@ import os
 
 import pygame
 
-from settings import Settings
-from ship import Ship
-from bullet import Bullet
-from game_stats import Gamestats
-from button import Button
-from scoreboard import Scoreboard
-from ability_square import AbilityButton
-from text import Text
-from shield import WarpShield
-from game_states import GameStates as GS
-from alien_pattern import AlienPattern as AP
-from horde import Horde
+from Play_Screen.settings import Settings
+from Play_Screen.ship import Ship
+from Play_Screen.bullet import Bullet
+from UI.game_stats import Gamestats
+from UI.button import Button
+from Play_Screen.scoreboard import Scoreboard
+from Play_Screen.ability_square import AbilityButton
+from UI.text import Text
+from Play_Screen.shield import WarpShield
+from UI.all_enums import GameStates as GS
+from UI.all_enums import AlienPattern as AP
+from Play_Screen.horde import Horde
 from game_sounds import GameSounds
 
 class AlienInvasion:

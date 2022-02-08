@@ -1,6 +1,6 @@
-import enum
+from enum import Enum
 
-class CollisionsStates(enum.Enum):
+class CollisionsStates(Enum):
     ONEGROUP = (0, 1 ,2)
     FIRSTTWO = (0, 1)
     LASTTWO = (1, 2)
@@ -12,3 +12,14 @@ class CollisionsStates(enum.Enum):
     SECONDCOLUMNRIGHT = (1, 4)
     THIRDCOLUMNLEFT = (2, 3)
     THIRDCOLUMNRIGHT = (2, 4)
+
+class AlienPattern(Enum):
+    BASIC = 0
+    THREEROWS = 1
+
+class GameStates(Enum):
+    MAINMENU = 1
+    PLAYSCREEN = 2
+    PAUSEMENU = 3
+    INFOSCREEN = 4
+    ENDSCREEN = 5

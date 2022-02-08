@@ -1,9 +1,9 @@
 import pygame
 import random
-from alien import Alien
-from alien_bullet import AlienBullet
-from alien_pattern import AlienPattern as AP
-from collisions_states import CollisionsStates as CS
+from Play_Screen.alien import Alien
+from Play_Screen.alien_bullet import AlienBullet
+from UI.all_enums import AlienPattern as AP
+from UI.all_enums import CollisionsStates as CS
 
 class Horde:
     """A class to handle all alien methods and things"""

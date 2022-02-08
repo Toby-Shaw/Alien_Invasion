@@ -1,7 +1,7 @@
 import pygame
 from pygame.sprite import Sprite
-from alien_pattern import AlienPattern as AP
-from collisions_states import CollisionsStates as CS
+from UI.all_enums import AlienPattern as AP
+from UI.all_enums import CollisionsStates as CS
 
 class Alien(Sprite):
     """A class to represent a single alien in the fleet"""
