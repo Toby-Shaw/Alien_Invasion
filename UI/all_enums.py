@@ -23,3 +23,4 @@ class GameStates(Enum):
     PAUSEMENU = 3
     INFOSCREEN = 4
     ENDSCREEN = 5
+    SETTINGS = 6

@@ -8,6 +8,7 @@ from UI.all_enums import CollisionsStates as CS
 class Horde:
     """A class to handle all alien methods and things"""
     def __init__(self, ai_game):
+        """Initialize the horde"""
         self.screen = ai_game.screen
         self.settings = ai_game.settings
         self.alien_pattern = ai_game.alien_pattern

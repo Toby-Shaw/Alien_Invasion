@@ -19,6 +19,7 @@ from UI.all_enums import GameStates as GS
 from UI.all_enums import AlienPattern as AP
 from Play_Screen.horde import Horde
 from game_sounds import GameSounds
+from tkinter import *
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -53,6 +54,8 @@ class AlienInvasion:
             (self.settings.screen_width / 2), (self.settings.screen_height / 2))
         self.info = Button(self, "Information", (0, 255, 0), 
             self.settings.screen_width / 2, (self.settings.screen_height / 2 + 100))
+        self.settings_button = Button(self, "Settings", (0, 255, 0),
+            self.settings.screen_width / 2, (self.settings.screen_height / 2 + 200))
 
         # Make the title + Pause text
         self.title = Text(self, "Alien Invasion", 110, (0, 255, 0), 
@@ -73,6 +76,7 @@ class AlienInvasion:
         blocks up to two bullets  from the enemies before breaking.
         Activate it with the up key or W.""",
             40, (0, 0, 0), 550, 250)
+        self.music_text = Text(self, """Music Volume:              Sound Volume:""", 60, (0, 0, 0), 300, 200)
 
         # Make the Ability "strong bullet"
         self.strong_bullet_square = AbilityButton(self, "B", 130)
@@ -160,6 +164,8 @@ class AlienInvasion:
             elif self.info.rect.collidepoint(mouse_pos):
             # Go to info screen
                 self.stats.game_layer = GS.INFOSCREEN
+            elif self.settings_button.rect.collidepoint(mouse_pos):
+                self.stats.game_layer = GS.SETTINGS
 
     def _check_pause_buttons(self, mouse_pos):
         """Check pause screen buttons"""
@@ -223,7 +229,7 @@ class AlienInvasion:
             high_score.write(str(self.stats.high_score))
             self.stats.game_layer = GS.MAINMENU
             pygame.mouse.set_visible(True)
-        elif self.stats.game_layer == GS.INFOSCREEN or self.stats.game_layer == GS.ENDSCREEN:
+        elif self.stats.game_layer == GS.INFOSCREEN or self.stats.game_layer == GS.ENDSCREEN or self.stats.game_layer == GS.SETTINGS:
             # Go back to the main menu
             self.stats.game_layer = GS.MAINMENU
         else:
@@ -427,6 +433,7 @@ class AlienInvasion:
             self.title.draw_text()
             self.play_button.draw_button()
             self.info.draw_button()
+            self.settings_button.draw_button()
             
         # Draw the pause screen when appropriate
         elif self.stats.game_layer == GS.PAUSEMENU:
@@ -442,6 +449,9 @@ class AlienInvasion:
         elif self.stats.game_layer == GS.ENDSCREEN:
             self.main_menu.draw_button()
             self.game_over.draw_text()
+
+        elif self.stats.game_layer == GS.SETTINGS:
+            self.music_text.draw_text()
 
         # Draw the fps screen on every screen
         self.fps_meter.draw_text()
