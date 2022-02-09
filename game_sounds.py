@@ -5,9 +5,9 @@ class GameSounds:
 
     def __init__(self):
         """Initialize the music and initial volumes, play the music"""
-        music.load("Games\Alien_Invasion\Music\cinematic-space-drone-10623.wav")
-        music.set_volume(0.5)
-        music.play()
+        music.load("Games/Alien_Invasion/Music/cinematic-space-drone-10623.wav")
+        music.set_volume(0.9)
+        music.play(-1)
         self.shield_hit = Sound("Games/Alien_Invasion/Music/shield_hit.wav")
         self.shield_hit.set_volume(0.5)
         self.shield_up = Sound("Games/Alien_Invasion/Music/shield_up.wav")
