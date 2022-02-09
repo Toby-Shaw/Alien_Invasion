@@ -19,7 +19,7 @@ from UI.all_enums import GameStates as GS
 from UI.all_enums import AlienPattern as AP
 from Play_Screen.horde import Horde
 from game_sounds import GameSounds
-from slider import Slider
+from UI.slider import Slider
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -224,12 +224,12 @@ class AlienInvasion:
             if self.stats.game_layer == GS.MAINMENU:
                 self._start_game()
         elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-            if self.settings.normal_bullet and self.strong_bullet_square.cooldown_up:
+            if self.settings.normal_bullet and self.strong_bullet_square.cooldown_up and self.stats.game_layer == GS.PLAYSCREEN:
                 self.game_sounds.sound_channel.play(self.game_sounds.strong_start, 0, 550)
                 self.settings.strong_bullet()
                 self.strong_bullet_square.covering = True
         elif event.key == pygame.K_UP or event.key == pygame.K_w:
-            if not self.settings.warp_up and self.warp_square.cooldown_up:
+            if not self.settings.warp_up and self.warp_square.cooldown_up and self.stats.game_layer == GS.PLAYSCREEN:
                 self.game_sounds.sound_channel.play(self.game_sounds.shield_up)
                 self.settings.warp_up = True
                 self.warp_square.covering = True
@@ -349,7 +349,7 @@ class AlienInvasion:
         """Respond to shield-shooter alien collisions."""
         if (pygame.sprite.spritecollide(self.warp_shield, self.horde.alien_bullets, self.settings.warp_up)
             and self.settings.warp_up):
-            self.game_sounds.sound_channel.play(self.game_sounds.shield_hit, 0 , 200, 200)
+            #self.game_sounds.sound_channel.play(self.game_sounds.shield_hit, 0 , 200, 200)
             self.settings.shield_hits += 1
             # If the shield has been hit too many times, start cooldown + it's broken
             if self.settings.shield_hits >= self.settings.allowed_hits:

@@ -19,7 +19,7 @@ class Slider:
         self.crossbar_bg.centery = self.bg_rect.centery
         self.crossbar_front.center = self.crossbar_bg.center
         self.clicked = False
-        self.previous_value = 1
+        self.previous_value = 0.9
         self.id = id
 
     def update(self, mouse_pos, new_click):
@@ -35,7 +35,8 @@ class Slider:
                 self.crossbar_bg.right = self.bg_rect.right
             self.crossbar_front.center = self.crossbar_bg.center
             if mouse_pos[0] != self.previous_value:
-                self.update_statistic((self.crossbar_bg.left - self.bg_rect.left) / 300)
+                self.latest_value = (self.crossbar_bg.left - self.bg_rect.left) / 300
+                self.update_statistic(self.latest_value)
             self.previous_value = mouse_pos[0]
 
     def update_statistic(self, present_value):
