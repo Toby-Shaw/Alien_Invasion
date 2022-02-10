@@ -335,8 +335,7 @@ class AlienInvasion:
             if not self.horde.aliens:
                 self.random_flag = 1
         elif self.alien_pattern == AP.THREEROWS:
-            # Weird backwards thinking, but simpler logic is checking
-            # If any of them exist, and doing an else if that's not true
+            # if any exist, don't do anything, otherwise new level
             if self.horde.column3_aliens or self.horde.column2_aliens or self.horde.column1_aliens:
                 pass
             elif self.random_flag == 1:
@@ -349,7 +348,7 @@ class AlienInvasion:
         """Respond to shield-shooter alien collisions."""
         if (pygame.sprite.spritecollide(self.warp_shield, self.horde.alien_bullets, self.settings.warp_up)
             and self.settings.warp_up):
-            #self.game_sounds.sound_channel.play(self.game_sounds.shield_hit, 0 , 200, 200)
+            self.game_sounds.sound_channel.play(self.game_sounds.shield_hit)
             self.settings.shield_hits += 1
             # If the shield has been hit too many times, start cooldown + it's broken
             if self.settings.shield_hits >= self.settings.allowed_hits:
