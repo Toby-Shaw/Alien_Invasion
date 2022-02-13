@@ -44,7 +44,6 @@ class Horde:
                 group.update()
                 if pygame.sprite.spritecollideany(self.ship, group):
                     self.ai_game._ship_hit()
-        # Hopefully having these after will prevent odd fleet down movement
         self._check_fleet_edges()
         self._check_aliens_bottom()
         if pygame.sprite.spritecollideany(self.ship, self.alien_bullets):

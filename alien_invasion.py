@@ -1,4 +1,5 @@
 from ast import Pass
+from pickle import TRUE
 import sys
 from time import sleep
 import random
@@ -20,6 +21,8 @@ from UI.all_enums import AlienPattern as AP
 from Play_Screen.horde import Horde
 from game_sounds import GameSounds
 from UI.slider import Slider
+from Play_Screen.boss import Boss
+from UI.all_enums import BossPattern as BP
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -93,7 +96,9 @@ class AlienInvasion:
         # Start Alien Invasion in an inactive state.
         self.stats.game_layer = GS.MAINMENU
         self.cheats = False
-
+        self.boss = Boss(self)
+        self.boss_pattern = BP.SHOOTINPLACE
+        self.general_play = True
         # Music
         self.game_sounds = GameSounds()
         # Important for new_level final frames
@@ -105,12 +110,16 @@ class AlienInvasion:
             self._check_events()
             self._update_fps()
             if self.stats.game_layer == GS.PLAYSCREEN:
-                self.ship.update()
-                self._update_bullets()
-                self.horde._update_aliens()
-                self.horde._update_alien_bullets()
-                self.strong_bullet_square._cooldown()
-                self.warp_square._cooldown()
+                if self.general_play:
+                    self.ship.update()
+                    self._update_bullets()
+                    self.horde._update_aliens()
+                    self.horde._update_alien_bullets()
+                    self.strong_bullet_square._cooldown()
+                    self.warp_square._cooldown()
+                    self.boss.update(self.boss_pattern)
+                else:
+                    self.boss.check_cut_scene_movement()
             elif self.stats.game_layer == GS.SETTINGS:
                 # update the sliders each frame if necessary
                 mouse_pos = pygame.mouse.get_pos()
@@ -361,22 +370,23 @@ class AlienInvasion:
         sleep(0.5)
         self.bullets.empty()
         self.horde.alien_bullets.empty()
-        self.horde._create_fleet()
-        self.settings.increase_speed()
-        self.strong_bullet_square._reset_cooldown()
-        self.warp_square._reset_cooldown()
-        self.settings.warp_up = False
-
-        # Reset speeds sometimes
-        if random.randint(1, 2) == 2:
-            self.settings.column_direction_list[0] = 1
-            self.settings.column_direction_list[1] = -1
-            self.settings.column_direction_list[2] = 1
-
         # Increase level
         self.stats.level += 1
         self.sb.prep_level()
-
+        if self.stats.level == 15:
+            self.alien_pattern = AP.BOSSROOM
+            self.boss.cut_scene()
+        if self.alien_pattern == AP.THREEROWS or self.alien_pattern == AP.BASIC:
+            self.horde._create_fleet()
+            self.settings.increase_speed()
+            # Reset speeds sometimes
+            if random.randint(1, 2) == 2:
+                self.settings.column_direction_list[0] = 1
+                self.settings.column_direction_list[1] = -1
+                self.settings.column_direction_list[2] = 1
+        self.strong_bullet_square._reset_cooldown()
+        self.warp_square._reset_cooldown()
+        self.settings.warp_up = False
         # Stop strong bullet if active
         if not self.settings.normal_bullet:
             self.settings.normal_bullet_reset() 
@@ -432,11 +442,15 @@ class AlienInvasion:
             bullet.draw_bullet()
         for alien_bullet in self.horde.alien_bullets.sprites():
             alien_bullet.draw_alien_bullet()
+        for alien_bullet in self.boss.alien_bullets.sprites():
+            alien_bullet.draw_alien_bullet()
         if self.alien_pattern == AP.BASIC:
             self.horde.aliens.draw(self.screen)
         elif self.alien_pattern == AP.THREEROWS:
             for group in self.horde.three_columns_group:
                 group.draw(self.screen)
+        elif self.alien_pattern == AP.BOSSROOM:
+            self.boss.draw()
 
         # Draw the score info and ability squares
         self.sb.show_score()
@@ -481,6 +495,7 @@ class AlienInvasion:
 
         # Draw the fps screen on every screen
         self.fps_meter.draw_text()
+        #self.boss.draw()
         
         pygame.display.flip()
 

@@ -16,6 +16,7 @@ class CollisionsStates(Enum):
 class AlienPattern(Enum):
     BASIC = 0
     THREEROWS = 1
+    BOSSROOM = 2
 
 class GameStates(Enum):
     MAINMENU = 1
@@ -24,3 +25,6 @@ class GameStates(Enum):
     INFOSCREEN = 4
     ENDSCREEN = 5
     SETTINGS = 6
+
+class BossPattern(Enum):
+    SHOOTINPLACE = 1

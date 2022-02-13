@@ -19,4 +19,5 @@ class GameSounds:
         self.bullet_fired = Sound("Games/Alien_Invasion/Music/laserShoot.wav")
         self.bullet_fired.set_volume(0.15)
         self.ship_hit = Sound("Games/Alien_Invasion/Music/ship_hit.wav")
+        self.ship_hit.set_volume(0.75)
         self.sound_channel = Channel(0)
