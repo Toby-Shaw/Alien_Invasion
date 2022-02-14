@@ -97,7 +97,7 @@ class AlienInvasion:
         self.stats.game_layer = GS.MAINMENU
         self.cheats = False
         self.boss = Boss(self)
-        self.boss_pattern = BP.SHOOTINPLACE
+        self.boss_pattern = BP.SHOOTBASIC
         self.general_play = True
         # Music
         self.game_sounds = GameSounds()

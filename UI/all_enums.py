@@ -27,4 +27,5 @@ class GameStates(Enum):
     SETTINGS = 6
 
 class BossPattern(Enum):
-    SHOOTINPLACE = 1
+    SHOOTBASIC = 1
+    DARTTOHIT = 2
