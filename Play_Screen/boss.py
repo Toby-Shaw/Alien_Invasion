@@ -4,12 +4,16 @@ from UI.all_enums import BossPattern as BP
 from Play_Screen.alien_bullet import AlienBullet
 import time
 import random
+from pygame.sprite import Sprite
 
-class Boss:
-    def __init__(self, ai_game):
-        self.ai_game = ai_game
-        self.screen = ai_game.screen
-        self.settings = ai_game.settings
+class Boss(Sprite):
+    def __init__(self, horde):
+        """Initialize the Boss placement and things"""
+        super().__init__()
+        self.ai_game = horde
+        self.screen = horde.screen
+        self.settings = horde.settings
+        self.horde = horde
 
         self.base_image = pygame.image.load("Games/Alien_Invasion/Images/alien_big.png")
         #self.image = pygame.transform.scale2x(self.base_image)
@@ -28,72 +32,95 @@ class Boss:
         self.switch_cooldown = 0
         self.switch_time = False
         self.number_screen_hits = 0
+        self.needed_screen_hits = random.randint(3, 6)
+        self.delay_frames = random.randint(5, 100)
+        self.delayed_frames = 0
     
     def draw(self):
+        """Draw the boss"""
         self.screen.blit(self.base_image, self.rect)
 
     def update(self, boss_pattern):
+        """If the alien_pattern is correct, shoot, move, and switch patterns if needed"""
         if self.ai_game.alien_pattern == AP.BOSSROOM:
             self._shoot_bullet()
             self._move_accordingly(boss_pattern)
-            self.alien_bullets.update()
-            for bullet in self.alien_bullets.copy():
-                if bullet.rect.top >= self.settings.screen_height - 35:
-                    self.alien_bullets.remove(bullet)
+            self._update_alien_bullets()
             if self.switch_time:
                 self._switch_pattern()
             self.switch_cooldown += 1
 
+    def _update_alien_bullets(self):
+        """Update and delete if needed the bullets"""
+        self.alien_bullets.update(speed = 7)
+        for bullet in self.alien_bullets.copy():
+            if bullet.rect.top >= self.settings.screen_height - 35:
+                self.alien_bullets.remove(bullet)
+
     def _switch_pattern(self):
-        if self.switch_cooldown > 20 and random.randint(1, 3) == 3:
+        """If the cooldown is up, switch patterns"""
+        if self.switch_cooldown > 20 and self.delayed_frames >= self.delay_frames and self.rect.y <= 450:
+            self.delay_frames = random.randint(5, 100)
+            self.delayed_frames = 0
             self.switch_cooldown = 0
             self.switch_time = False
-            self.ai_game.boss_pattern = random.choice(self.all_patterns)
+            if self.horde.ai_game.boss_pattern == BP.SHOOTBASIC: 
+                self.needed_screen_hits = random.randint(2, 7)
+                self.horde.ai_game.boss_pattern = BP.DARTTOHIT
+            else:
+                self.needed_screen_hits = random.randint(1, 5)
+                self.horde.ai_game.boss_pattern = BP.SHOOTBASIC
+        self.delayed_frames += 1
 
     def _move_accordingly(self, pattern):
+        """Move based on the pattern"""
         if pattern == BP.SHOOTBASIC:
-            self.x += 5 * self.xdirection
+            self.x += 5.5 * self.xdirection
             self.rect.x = self.x
-            if self._check_screen_edges():
-                self.xdirection *= -1
-                self.number_screen_hits += 1
-            if self.number_screen_hits == 5:
+            if self.number_screen_hits >= self.needed_screen_hits:
                 self.number_screen_hits = 0
                 self.switch_time = True
+            if self._check_screen_edges() == 0:
+                self.xdirection *= -1
+                self.rect.x -= 6 * self.xdirection
+                self.number_screen_hits += 1
         elif pattern == BP.DARTTOHIT:
-            if self._check_screen_edges():
+            if self._check_screen_edges() == 1:
                 self.ydirection *= -1
                 self.number_screen_hits += 1
                 self.y += 60 * self.ydirection
                 self.x += 150 * self.xdirection
                 self.rect.y = self.y
                 self.rect.x = self.x
-                if self._check_screen_edges():
+                if self._check_screen_edges() == 0:
                     self.xdirection *= -1
-                    self.x += 50 * self.xdirection
+                    self.x += 150 * self.xdirection
                     self.rect.x = self.x
             else:
-                self.y += 5 * self.ydirection
+                self.y += 5.5 * self.ydirection
                 self.rect.y = self.y
-                if self.rect.y <= 300 and self.number_screen_hits == 4:
+                if self.rect.y <= 300 and self.number_screen_hits >= self.needed_screen_hits:
                     self.switch_time = True
                     self.number_screen_hits = 0
     
     def _check_screen_edges(self):
+        """Check which, if any of the edges were hit"""
         if self.rect.left <= 0 or self.rect.right >= self.settings.screen_width:
-            return True
+            return(0)
         elif self.rect.bottom >= self.settings.screen_height or self.rect.top <= 0:
-            return True
+            return(1)
 
     def _shoot_bullet(self):
-        if self.time_since_shot > 50:
+        """Shoot an alien_bullet"""
+        if self.time_since_shot > 35:
             self.time_since_shot = 0
             new_bullet = AlienBullet(self.ai_game, self)
             self.alien_bullets.add(new_bullet)
         self.time_since_shot += 1
     
     def cut_scene(self):
-        self.ai_game.general_play = False
+        """Start the boss intro cutscene"""
+        self.horde.ai_game.general_play = False
         pygame.mixer.music.stop()
         pygame.mixer.music.unload()
         pygame.mixer.music.load("Games/Alien_Invasion/Music/Running_scared.wav")
@@ -101,10 +128,11 @@ class Boss:
         self.start_time = time.time()
         self.rect.bottom = 0
         self.rect.centerx = self.ai_game.settings.screen_width / 2
+        self.previous_step = 0
         self.check_cut_scene_movement()
         
-
     def check_cut_scene_movement(self):
+        """Do the boss moves"""
         if time.time() - self.start_time > self.previous_step:
             if self.number_steps <= 3:
                 self.previous_step += 0.82
@@ -116,8 +144,8 @@ class Boss:
                 self.previous_step += 0.205
                 self.rect.y += 10
             self.number_steps += 1
-        self.x = self.rect.x
-        self.y = self.rect.y
+            self.x = self.rect.x
+            self.y = self.rect.y
         if time.time() - self.start_time >= 9.6:
-            self.ai_game.general_play = True
+            self.horde.ai_game.general_play = True
         

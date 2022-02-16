@@ -4,6 +4,7 @@ from Play_Screen.alien import Alien
 from Play_Screen.alien_bullet import AlienBullet
 from UI.all_enums import AlienPattern as AP
 from UI.all_enums import CollisionsStates as CS
+from Play_Screen.boss import Boss
 
 class Horde:
     """A class to handle all alien methods and things"""
@@ -14,6 +15,9 @@ class Horde:
         self.alien_pattern = ai_game.alien_pattern
         self.ship = ai_game.ship
         self.ai_game = ai_game
+        self.boss = Boss(self)
+        self.boss_shell = pygame.sprite.GroupSingle()
+        self.boss_shell.add(self.boss)
 
         self.aliens = pygame.sprite.Group()
         # for AP.THREEROWS only
@@ -34,24 +38,40 @@ class Horde:
         Check if the fleet is at an edge, 
           then update the positions of all aliens in the fleet.
         """
+        self.alien_pattern = self.ai_game.alien_pattern
+        self._check_alien_ship_collisions_and_update()
+        self._check_fleet_edges()
+        self._check_aliens_bottom()
+        self._check_bullet_collisions()
+
+        # Fire the shooter aliens if needed.
+        self._fire_shooter_aliens()
+
+    def _check_bullet_collisions(self):
+        if self.alien_pattern == AP.THREEROWS or self.alien_pattern == AP.BASIC:
+            if pygame.sprite.spritecollide(self.ship, self.alien_bullets, True):
+                self.ai_game._ship_hit()
+        elif self.alien_pattern == AP.BOSSROOM:
+            if pygame.sprite.spritecollide(self.ship, self.boss.alien_bullets, True):
+                self.ai_game._ship_hit()
+
+    def _check_alien_ship_collisions_and_update(self):
+        """Update, and then check alien-ship collisions"""
         if self.alien_pattern == AP.BASIC:
             self.aliens.update()
             # Look for alien-ship collisions.
             if pygame.sprite.spritecollideany(self.ship, self.aliens):
-                self._ship_hit()
+                self.ai_game._ship_hit()
         elif self.alien_pattern == AP.THREEROWS:
             for group in self.three_columns_group:
                 group.update()
                 if pygame.sprite.spritecollideany(self.ship, group):
                     self.ai_game._ship_hit()
-        self._check_fleet_edges()
-        self._check_aliens_bottom()
-        if pygame.sprite.spritecollideany(self.ship, self.alien_bullets):
-            self.ai_game._ship_hit()
+        elif self.alien_pattern == AP.BOSSROOM:
+            self.boss.update(self.ai_game.boss_pattern)
+            if pygame.sprite.spritecollide(self.ship, self.boss_shell, False):
+                self.ai_game._ship_hit()
 
-        # Fire the shooter aliens if needed.
-        self._fire_shooter_aliens()
-        
     def _fire_shooter_aliens(self):
         """Have one alien shoot at any one time, earlier list address favored"""
         # Runs through every shooter alien address

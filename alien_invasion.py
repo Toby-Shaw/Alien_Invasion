@@ -96,8 +96,8 @@ class AlienInvasion:
         # Start Alien Invasion in an inactive state.
         self.stats.game_layer = GS.MAINMENU
         self.cheats = False
-        self.boss = Boss(self)
         self.boss_pattern = BP.SHOOTBASIC
+        self.various_alien_bullet_groups = [self.horde.alien_bullets, self.horde.boss.alien_bullets]
         self.general_play = True
         # Music
         self.game_sounds = GameSounds()
@@ -117,9 +117,8 @@ class AlienInvasion:
                     self.horde._update_alien_bullets()
                     self.strong_bullet_square._cooldown()
                     self.warp_square._cooldown()
-                    self.boss.update(self.boss_pattern)
                 else:
-                    self.boss.check_cut_scene_movement()
+                    self.horde.boss.check_cut_scene_movement()
             elif self.stats.game_layer == GS.SETTINGS:
                 # update the sliders each frame if necessary
                 mouse_pos = pygame.mouse.get_pos()
@@ -137,6 +136,8 @@ class AlienInvasion:
         self.sb.prep_level()
         self.sb.prep_ships()
         self.game_sounds.sound_channel.play(self.game_sounds.start_sound)
+        self.boss_pattern = BP.SHOOTBASIC
+        self.alien_pattern = AP.THREEROWS
 
         # Get rid of any remaining aliens and bullets.
         self.horde.aliens.empty()
@@ -161,19 +162,20 @@ class AlienInvasion:
                 high_score = open("Games/Alien_Invasion/high_score.txt", "w")
                 high_score.write(str(self.stats.high_score))
                 sys.exit()
-            elif event.type == pygame.KEYDOWN:
-                self._check_keydown_events(event)
             elif event.type == pygame.KEYUP:
                 self._check_keyup_events(event)
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_pos = pygame.mouse.get_pos()
-                self._check_main_buttons(mouse_pos)
-                self._check_pause_buttons(mouse_pos)
-                self._check_over_buttons(mouse_pos)
-                self._check_slider(mouse_pos, True, True)
-            elif event.type == pygame.MOUSEBUTTONUP:
-                self.music_slider.clicked = False
-                self.sound_slider.clicked = False
+            if self.general_play:
+                if event.type == pygame.KEYDOWN:
+                    self._check_keydown_events(event)
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+                    self._check_main_buttons(mouse_pos)
+                    self._check_pause_buttons(mouse_pos)
+                    self._check_over_buttons(mouse_pos)
+                    self._check_slider(mouse_pos, True, True)
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    self.music_slider.clicked = False
+                    self.sound_slider.clicked = False
                 
     def _check_main_buttons(self, mouse_pos):
         """Check the main screen buttons"""
@@ -194,6 +196,11 @@ class AlienInvasion:
         if self.stats.game_layer == GS.PAUSEMENU:
             if self.main_menu.rect.collidepoint(mouse_pos):
                 # Return to the main menu if clicked
+                if self.alien_pattern == AP.BOSSROOM:
+                    pygame.mixer.music.stop()
+                    pygame.mixer.music.unload()
+                    pygame.mixer.music.load("Games/Alien_Invasion/Music/cinematic-space-drone-10623.wav")
+                    pygame.mixer.music.play(-1)
                 self.stats.game_layer = GS.MAINMENU
             elif self.resume.rect.collidepoint(mouse_pos):
                 # Return to the game if clicked
@@ -259,10 +266,20 @@ class AlienInvasion:
             high_score = open("Games/Alien_Invasion/high_score.txt", "w")
             high_score.write(str(self.stats.high_score))
             self.stats.game_layer = GS.MAINMENU
+            if self.alien_pattern == AP.BOSSROOM:
+                    pygame.mixer.music.stop()
+                    pygame.mixer.music.unload()
+                    pygame.mixer.music.load("Games/Alien_Invasion/Music/cinematic-space-drone-10623.wav")
+                    pygame.mixer.music.play(-1)
             pygame.mouse.set_visible(True)
         elif self.stats.game_layer == GS.INFOSCREEN or self.stats.game_layer == GS.ENDSCREEN:
             # Go back to the main menu
             self.stats.game_layer = GS.MAINMENU
+            if self.alien_pattern == AP.BOSSROOM:
+                    pygame.mixer.music.stop()
+                    pygame.mixer.music.unload()
+                    pygame.mixer.music.load("Games/Alien_Invasion/Music/cinematic-space-drone-10623.wav")
+                    pygame.mixer.music.play(-1)
         elif self.stats.game_layer == GS.SETTINGS:
             self.stats.game_layer = self.previous_layer
         else:
@@ -329,6 +346,8 @@ class AlienInvasion:
                 self.collisions = pygame.sprite.groupcollide(
                     self.bullets, self.horde.three_columns_group[index], self.settings.normal_bullet, True)
                 self.collision_shell.append(self.collisions)
+        elif self.alien_pattern == AP.BOSSROOM:
+            self.collisions = pygame.sprite.spritecollide(self.horde.boss, self.bullets, True)
         for collision in self.collision_shell:
             for aliens in collision.values():
                 self.stats.score += self.settings.alien_points * len(aliens)
@@ -355,7 +374,10 @@ class AlienInvasion:
             
     def _check_alien_bullet_shield_collisions(self):
         """Respond to shield-shooter alien collisions."""
-        if (pygame.sprite.spritecollide(self.warp_shield, self.horde.alien_bullets, self.settings.warp_up)
+        # Finagled a way to get all groups to work regardless of pattern
+        # By doing odd alien_pattern thing, will make more flexible later
+        if (pygame.sprite.spritecollide(self.warp_shield, 
+            self.various_alien_bullet_groups[self.alien_pattern._value_ // 2], self.settings.warp_up)
             and self.settings.warp_up):
             self.game_sounds.sound_channel.play(self.game_sounds.shield_hit)
             self.settings.shield_hits += 1
@@ -375,7 +397,8 @@ class AlienInvasion:
         self.sb.prep_level()
         if self.stats.level == 15:
             self.alien_pattern = AP.BOSSROOM
-            self.boss.cut_scene()
+            self.ship.center_ship()
+            self.horde.boss.cut_scene()
         if self.alien_pattern == AP.THREEROWS or self.alien_pattern == AP.BASIC:
             self.horde._create_fleet()
             self.settings.increase_speed()
@@ -404,6 +427,8 @@ class AlienInvasion:
             for group in self.horde.three_columns_group:
                 group.empty()
             self.bullets.empty()
+            self.horde.boss.alien_bullets.empty()
+            self.horde.boss_shell.empty()
             self.horde.alien_bullets.empty()
 
             # Reset directions
@@ -411,17 +436,11 @@ class AlienInvasion:
             self.settings.column_direction_list[1] = -1   
             self.settings.column_direction_list[2] = 1
 
-            # Create a new fleet and center the ship.
-            self.horde._create_fleet()
-            self.ship.center_ship()
-
             # Reset strong bullet
-            if not self.settings.normal_bullet:
-                self.settings.normal_bullet_reset()
+            self.settings.normal_bullet_reset()
             self.strong_bullet_square._reset_cooldown()
             # Reset shield things
             self.warp_square._reset_cooldown()
-            # How/Why would it still be up idk, but in case
             self.settings.warp_up = False
 
             # Slow it down marginally
@@ -430,7 +449,20 @@ class AlienInvasion:
             self.settings.bullet_speed *= 0.95
 
             # Pause.
-            sleep(1)
+            # Create a new fleet and center the ship.
+            if self.alien_pattern == AP.BASIC or self.alien_pattern == AP.THREEROWS:
+                self.horde._create_fleet()
+                self.ship.center_ship()
+                sleep(1)
+            elif self.alien_pattern == AP.BOSSROOM:
+                self.horde.boss = Boss(self.horde)
+                self.horde.boss_shell.add(self.horde.boss)
+                self.various_alien_bullet_groups = [self.horde.alien_bullets, 
+                            self.horde.boss.alien_bullets]
+                self.boss_pattern = BP.SHOOTBASIC
+                sleep(1)
+                self.horde.boss.cut_scene()
+                self.ship.center_ship()  
         else:
             self.stats.game_layer = GS.ENDSCREEN
             pygame.mouse.set_visible(True)
@@ -442,7 +474,7 @@ class AlienInvasion:
             bullet.draw_bullet()
         for alien_bullet in self.horde.alien_bullets.sprites():
             alien_bullet.draw_alien_bullet()
-        for alien_bullet in self.boss.alien_bullets.sprites():
+        for alien_bullet in self.horde.boss.alien_bullets.sprites():
             alien_bullet.draw_alien_bullet()
         if self.alien_pattern == AP.BASIC:
             self.horde.aliens.draw(self.screen)
@@ -450,7 +482,7 @@ class AlienInvasion:
             for group in self.horde.three_columns_group:
                 group.draw(self.screen)
         elif self.alien_pattern == AP.BOSSROOM:
-            self.boss.draw()
+            self.horde.boss.draw()
 
         # Draw the score info and ability squares
         self.sb.show_score()

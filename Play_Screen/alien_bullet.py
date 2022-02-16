@@ -19,10 +19,10 @@ class AlienBullet(Sprite):
         # Store the bullet's position as a decimal value
         self.y = float(self.rect.y)
 
-    def update(self):
+    def update(self, speed = 4.4):
         """Move the bullet up the screen"""
         # Update the decimal position of the bullet.
-        self.y += self.settings.alien_bullet_speed
+        self.y += speed
         # Update the rect position.
         self.rect.y = self.y
 
