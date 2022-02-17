@@ -5,6 +5,7 @@ from Play_Screen.alien_bullet import AlienBullet
 import time
 import random
 from pygame.sprite import Sprite
+from Play_Screen.healthbar import HealthBar
 
 class Boss(Sprite):
     def __init__(self, horde):
@@ -14,10 +15,12 @@ class Boss(Sprite):
         self.screen = horde.screen
         self.settings = horde.settings
         self.horde = horde
-
+        self.max_hp = 600
+        self.health = self.max_hp
         self.base_image = pygame.image.load("Games/Alien_Invasion/Images/alien_big.png")
         #self.image = pygame.transform.scale2x(self.base_image)
         self.rect = self.base_image.get_rect()
+        self.healthbar = HealthBar(self, "Galgazar, Destroyer of Mice")
         self.rect.x = self.rect.width
         self.rect.y = self.rect.height
         self.alien_bullets = pygame.sprite.Group()
@@ -32,8 +35,8 @@ class Boss(Sprite):
         self.switch_cooldown = 0
         self.switch_time = False
         self.number_screen_hits = 0
-        self.needed_screen_hits = random.randint(3, 6)
-        self.delay_frames = random.randint(5, 100)
+        self.needed_screen_hits = random.randint(2, 4)
+        self.delay_frames = random.randint(5, 140)
         self.delayed_frames = 0
     
     def draw(self):
@@ -65,7 +68,7 @@ class Boss(Sprite):
             self.switch_cooldown = 0
             self.switch_time = False
             if self.horde.ai_game.boss_pattern == BP.SHOOTBASIC: 
-                self.needed_screen_hits = random.randint(2, 7)
+                self.needed_screen_hits = random.randint(3, 7)
                 self.horde.ai_game.boss_pattern = BP.DARTTOHIT
             else:
                 self.needed_screen_hits = random.randint(1, 5)

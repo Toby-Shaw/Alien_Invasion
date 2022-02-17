@@ -112,8 +112,8 @@ class AlienInvasion:
             if self.stats.game_layer == GS.PLAYSCREEN:
                 if self.general_play:
                     self.ship.update()
-                    self._update_bullets()
                     self.horde._update_aliens()
+                    self._update_bullets()
                     self.horde._update_alien_bullets()
                     self.strong_bullet_square._cooldown()
                     self.warp_square._cooldown()
@@ -197,10 +197,7 @@ class AlienInvasion:
             if self.main_menu.rect.collidepoint(mouse_pos):
                 # Return to the main menu if clicked
                 if self.alien_pattern == AP.BOSSROOM:
-                    pygame.mixer.music.stop()
-                    pygame.mixer.music.unload()
-                    pygame.mixer.music.load("Games/Alien_Invasion/Music/cinematic-space-drone-10623.wav")
-                    pygame.mixer.music.play(-1)
+                    self.game_sounds.change_back()
                 self.stats.game_layer = GS.MAINMENU
             elif self.resume.rect.collidepoint(mouse_pos):
                 # Return to the game if clicked
@@ -254,6 +251,9 @@ class AlienInvasion:
         elif event.key == pygame.K_b and self.cheats == True:
             for group in self.horde.three_columns_group:
                 group.empty()
+        elif event.key == pygame.K_n and self.cheats == True:
+            self.horde.boss.health -= 100
+            self.horde.boss.healthbar._update_health()
 
     def _check_escape_events(self):
         """Change screens when q is pressed"""
@@ -267,19 +267,13 @@ class AlienInvasion:
             high_score.write(str(self.stats.high_score))
             self.stats.game_layer = GS.MAINMENU
             if self.alien_pattern == AP.BOSSROOM:
-                    pygame.mixer.music.stop()
-                    pygame.mixer.music.unload()
-                    pygame.mixer.music.load("Games/Alien_Invasion/Music/cinematic-space-drone-10623.wav")
-                    pygame.mixer.music.play(-1)
+                self.game_sounds.change_back()
             pygame.mouse.set_visible(True)
         elif self.stats.game_layer == GS.INFOSCREEN or self.stats.game_layer == GS.ENDSCREEN:
             # Go back to the main menu
             self.stats.game_layer = GS.MAINMENU
             if self.alien_pattern == AP.BOSSROOM:
-                    pygame.mixer.music.stop()
-                    pygame.mixer.music.unload()
-                    pygame.mixer.music.load("Games/Alien_Invasion/Music/cinematic-space-drone-10623.wav")
-                    pygame.mixer.music.play(-1)
+                self.game_sounds.change_back()
         elif self.stats.game_layer == GS.SETTINGS:
             self.stats.game_layer = self.previous_layer
         else:
@@ -348,6 +342,19 @@ class AlienInvasion:
                 self.collision_shell.append(self.collisions)
         elif self.alien_pattern == AP.BOSSROOM:
             self.collisions = pygame.sprite.spritecollide(self.horde.boss, self.bullets, True)
+            if self.collisions:
+                if not self.settings.normal_bullet:
+                    if self.horde.boss.health >= 15:
+                        self.horde.boss.health -= 15
+                    elif self.horde.boss.health < 15:
+                        self.horde.boss.health = 0
+                    self.horde.boss.healthbar._update_health()
+                else:
+                    if self.horde.boss.health >= 7:
+                        self.horde.boss.health -= 7 
+                    elif self.horde.boss.health < 7:
+                        self.horde.boss.health = 0
+                    self.horde.boss.healthbar._update_health()
         for collision in self.collision_shell:
             for aliens in collision.values():
                 self.stats.score += self.settings.alien_points * len(aliens)
@@ -369,8 +376,14 @@ class AlienInvasion:
             elif self.random_flag == 1:
                 self._new_level()
                 self.random_flag = 0
-            else:
+            elif self.random_flag == 0:
                 self.random_flag = 1
+        elif self.alien_pattern == AP.BOSSROOM:
+            if self.horde.boss.health == 0:
+                self.alien_pattern = AP.THREEROWS
+                self.stats.score += 100000
+                self.sb.prep_score()
+                self.sb.check_high_score()
             
     def _check_alien_bullet_shield_collisions(self):
         """Respond to shield-shooter alien collisions."""
@@ -392,13 +405,24 @@ class AlienInvasion:
         sleep(0.5)
         self.bullets.empty()
         self.horde.alien_bullets.empty()
+        self.horde.boss.alien_bullets.empty()
         # Increase level
         self.stats.level += 1
         self.sb.prep_level()
-        if self.stats.level == 15:
+        if self.stats.level % 5 == 0:
+            self.warp_square = AbilityButton(self, "S", 50)
+            self.strong_bullet_square = AbilityButton(self, "B", -50)
+            self.horde.boss = Boss(self.horde)
+            self.horde.boss_shell.add(self.horde.boss)
+            self.various_alien_bullet_groups = [self.horde.alien_bullets, 
+                            self.horde.boss.alien_bullets]
             self.alien_pattern = AP.BOSSROOM
             self.ship.center_ship()
             self.horde.boss.cut_scene()
+        elif self.stats.level % 5 == 1 and self.stats.level != 1:
+            self.warp_square = AbilityButton(self, "S", 230)
+            self.strong_bullet_square = AbilityButton(self, "B", 130)
+            self.game_sounds.change_back()
         if self.alien_pattern == AP.THREEROWS or self.alien_pattern == AP.BASIC:
             self.horde._create_fleet()
             self.settings.increase_speed()
@@ -485,10 +509,18 @@ class AlienInvasion:
             self.horde.boss.draw()
 
         # Draw the score info and ability squares
-        self.sb.show_score()
+        if not self.alien_pattern == AP.BOSSROOM:
+            self.sb.show_score()
+        else:
+            if self.general_play:
+                self.horde.boss.healthbar._prep_name()
+                self.horde.boss.healthbar._draw_health_bar()
+                
+            self.sb.show_ships()
         self.strong_bullet_square.draw_ability_square()
         self.warp_square.draw_ability_square()
         self.warp_shield.draw_shield()
+        
         
     def _update_screen(self):
         """Update images on the screen, and flip to the new screen."""

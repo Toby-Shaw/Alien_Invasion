@@ -21,3 +21,10 @@ class GameSounds:
         self.ship_hit = Sound("Games/Alien_Invasion/Music/ship_hit.wav")
         self.ship_hit.set_volume(0.75)
         self.sound_channel = Channel(0)
+
+    def change_back(self):
+        """change back to the default music"""
+        music.stop()
+        music.unload()
+        music.load("Games/Alien_Invasion/Music/cinematic-space-drone-10623.wav")
+        music.play(-1)

@@ -111,17 +111,18 @@ class Horde:
 
     def _check_in_front(self, alien, group):
         """Check before firing that no aliens in specified group are in front of the shooter"""
-        if alien > 26: 
+        if alien > self.number_aliens_x * 3 - 1: 
             return True
-        elif alien // 9 == 2 and (self.alien_start_list[alien + 9] in group):
+        elif (alien // self.number_aliens_x == 2 
+                    and (self.alien_start_list[alien + self.number_aliens_x] in group)):
             return False
-        elif alien // 9 == 1:
+        elif alien // self.number_aliens_x == 1:
             for x in range(1, 3):
-                if self.alien_start_list[alien + 9 * x] in group:
+                if self.alien_start_list[alien + self.number_aliens_x * x] in group:
                     return False
-        elif alien < 9:
+        elif alien < self.number_aliens_x:
             for x in range(1, 4):
-                if self.alien_start_list[alien + 9 * x] in group:
+                if self.alien_start_list[alien + self.number_aliens_x * x] in group:
                     return False
         return True
 
@@ -165,9 +166,9 @@ class Horde:
         if self.alien_pattern == AP.BASIC:
             self.aliens.add(alien)
         elif self.alien_pattern == AP.THREEROWS:
-            if alien_number < 3:
+            if alien_number < self.number_aliens_x // 3:
                 self.column1_aliens.add(alien)
-            elif alien_number < 6:
+            elif alien_number < self.number_aliens_x // 1.5:
                 self.column2_aliens.add(alien)
             else:
                 self.column3_aliens.add(alien)
