@@ -53,6 +53,9 @@ class Horde:
                 self.ai_game._ship_hit()
         elif self.alien_pattern == AP.BOSSROOM:
             if pygame.sprite.spritecollide(self.ship, self.boss.alien_bullets, True):
+                if self.boss.rect.bottom >= 550:
+                    self.boss.ydirection = -1
+                    self.boss.rect.y -= 20
                 self.ai_game._ship_hit()
 
     def _check_alien_ship_collisions_and_update(self):
@@ -70,6 +73,8 @@ class Horde:
         elif self.alien_pattern == AP.BOSSROOM:
             self.boss.update(self.ai_game.boss_pattern)
             if pygame.sprite.spritecollide(self.ship, self.boss_shell, False):
+                self.boss.ydirection *= -1
+                self.boss.rect.y - 10
                 self.ai_game._ship_hit()
 
     def _fire_shooter_aliens(self):

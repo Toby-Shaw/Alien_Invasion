@@ -145,6 +145,7 @@ class AlienInvasion:
         for group in self.horde.three_columns_group:
             group.empty()
         self.horde.alien_bullets.empty()
+        self.horde.boss_shell.empty()
 
         # Create a new fleet and center the ship.
         self.horde._create_fleet()
@@ -479,16 +480,22 @@ class AlienInvasion:
                 self.ship.center_ship()
                 sleep(1)
             elif self.alien_pattern == AP.BOSSROOM:
-                self.horde.boss = Boss(self.horde)
+                temp_health = self.horde.boss.health
+                temp_coords = self.horde.boss.rect.center
+                temp_pattern = self.boss_pattern
+                temp_directions = [self.horde.boss.xdirection, self.horde.boss.ydirection]
+                self.horde.boss = Boss(self.horde, health=temp_health, coords=temp_coords, directions=temp_directions)
                 self.horde.boss_shell.add(self.horde.boss)
                 self.various_alien_bullet_groups = [self.horde.alien_bullets, 
                             self.horde.boss.alien_bullets]
-                self.boss_pattern = BP.SHOOTBASIC
+                self.boss_pattern = temp_pattern
+                self.horde.boss.healthbar._update_health()
                 sleep(1)
-                self.horde.boss.cut_scene()
-                self.ship.center_ship()  
+                #self.horde.boss.cut_scene()
+                #self.ship.center_ship()  
         else:
             self.stats.game_layer = GS.ENDSCREEN
+            self.alien_pattern = AP.THREEROWS
             pygame.mouse.set_visible(True)
 
     def _update_play_screen(self):

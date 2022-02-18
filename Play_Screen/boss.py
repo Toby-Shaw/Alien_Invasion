@@ -8,7 +8,7 @@ from pygame.sprite import Sprite
 from Play_Screen.healthbar import HealthBar
 
 class Boss(Sprite):
-    def __init__(self, horde):
+    def __init__(self, horde, health = 600, coords = (0, 0), directions = [1, 1]):
         """Initialize the Boss placement and things"""
         super().__init__()
         self.ai_game = horde
@@ -16,21 +16,21 @@ class Boss(Sprite):
         self.settings = horde.settings
         self.horde = horde
         self.max_hp = 600
-        self.health = self.max_hp
+        self.health = health
         self.base_image = pygame.image.load("Games/Alien_Invasion/Images/alien_big.png")
         #self.image = pygame.transform.scale2x(self.base_image)
         self.rect = self.base_image.get_rect()
-        self.healthbar = HealthBar(self, "Galgazar, Destroyer of Mice")
-        self.rect.x = self.rect.width
-        self.rect.y = self.rect.height
+        self.healthbar = HealthBar(self, "Galgazar, Destroyer of Moons")
+        self.rect.centerx = coords[0]
+        self.rect.centery = coords[1]
         self.alien_bullets = pygame.sprite.Group()
         self.time_since_shot = 0
         self.previous_step = 0
         self.number_steps = 0
         self.basic_speed = 5
         # 1 = right, left = -1
-        self.xdirection = 1
-        self.ydirection = 1
+        self.xdirection = directions[0]
+        self.ydirection = directions[1]
         self.all_patterns = [BP.SHOOTBASIC, BP.DARTTOHIT]
         self.switch_cooldown = 0
         self.switch_time = False
@@ -38,6 +38,8 @@ class Boss(Sprite):
         self.needed_screen_hits = random.randint(2, 4)
         self.delay_frames = random.randint(5, 140)
         self.delayed_frames = 0
+        self.x = self.rect.x
+        self.y = self.rect.y
     
     def draw(self):
         """Draw the boss"""
@@ -88,6 +90,7 @@ class Boss(Sprite):
                 self.rect.x -= 6 * self.xdirection
                 self.number_screen_hits += 1
         elif pattern == BP.DARTTOHIT:
+            # If it hits top/bottom, reverse, and move accordingly
             if self._check_screen_edges() == 1:
                 self.ydirection *= -1
                 self.number_screen_hits += 1
@@ -97,7 +100,7 @@ class Boss(Sprite):
                 self.rect.x = self.x
                 if self._check_screen_edges() == 0:
                     self.xdirection *= -1
-                    self.x += 150 * self.xdirection
+                    self.x += (self._amount_beyond_edge() + random.randint(5, 90)) * self.xdirection
                     self.rect.x = self.x
             else:
                 self.y += 5.5 * self.ydirection
@@ -105,6 +108,13 @@ class Boss(Sprite):
                 if self.rect.y <= 300 and self.number_screen_hits >= self.needed_screen_hits:
                     self.switch_time = True
                     self.number_screen_hits = 0
+
+    def _amount_beyond_edge(self):
+        """Check how far beyond an edge the boss has gone"""
+        if self.rect.x <= 0:
+            return(self.rect.x * -1)
+        elif self.rect.x >= self.settings.screen_width:
+            return(self.rect.x - self.settings.screen_width)
     
     def _check_screen_edges(self):
         """Check which, if any of the edges were hit"""
@@ -113,9 +123,9 @@ class Boss(Sprite):
         elif self.rect.bottom >= self.settings.screen_height or self.rect.top <= 0:
             return(1)
 
-    def _shoot_bullet(self):
+    def _shoot_bullet(self, cooldown = 35):
         """Shoot an alien_bullet"""
-        if self.time_since_shot > 35:
+        if self.time_since_shot > cooldown:
             self.time_since_shot = 0
             new_bullet = AlienBullet(self.ai_game, self)
             self.alien_bullets.add(new_bullet)
