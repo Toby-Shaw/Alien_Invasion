@@ -64,8 +64,7 @@ class Horde:
                     self.boss.boss_pattern = random.choice([BP.SHOOTBASIC, BP.DARTTOHIT])
                     self.boss.ydirection = -1
                     self.ai_game._ship_hit()
-                elif (pygame.Rect.colliderect(self.ai_game.warp_shield.rect, self.boss.beam_rect) 
-                        and self.settings.warp_up):
+                elif self.settings.warp_up and pygame.Rect.colliderect(self.ai_game.warp_shield.rect, self.boss.beam_rect):
                     self.ai_game._shield_hit(hits = 3, break_beam = True)
 
     def _check_alien_ship_collisions_and_update(self):
@@ -94,15 +93,13 @@ class Horde:
             for x in self.shooter_alien_addresses:
                 # Checks number of bullets, that there is no one in front,
                 # and checks that the alien is alive.
-                if (len(self.alien_bullets) <= self.settings.alien_bullets_allowed
-                    and self._check_in_front(x, self.aliens) and self.alien_start_list[x] in self.aliens
-                    and self.time_since_shot >= 50):
+                if (self.time_since_shot >= 50 and self.alien_start_list[x] in self.aliens 
+                    and len(self.alien_bullets) <= self.settings.alien_bullets_allowed
+                    and self._check_in_front(x, self.aliens)):
                     self.time_since_shot = 0
                     new_bullet = AlienBullet(self, self.alien_start_list[x])
                     self.alien_bullets.add(new_bullet)
         elif self.alien_pattern == AP.THREEROWS:
-            # Basically the same setup as before, just with optimized if statements
-            # and accounting for checking through several groups
             # If using rows instead of columns, this will not work
             if (len(self.alien_bullets) <= self.settings.alien_bullets_allowed):
                 for address in self.shooter_alien_addresses:

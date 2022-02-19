@@ -79,7 +79,7 @@ class AlienInvasion:
         blocks up to two bullets  from the enemies before breaking.
         Activate it with the up key or W.""",
             40, (0, 0, 0), 550, 250)
-        self.music_text = Text(self, """Music Volume:              Sound Volume:""", 
+        self.music_text = Text(self, """Music Volume:              Sound Volume:""",
                     60, (0, 0, 0), 300, 200)
         self.music_slider = Slider(self, (150, 255, 150), 750, 200, 0)
         self.sound_slider = Slider(self, (150, 255, 150), 750, 480, 1)
