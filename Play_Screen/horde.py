@@ -5,6 +5,7 @@ from Play_Screen.alien_bullet import AlienBullet
 from UI.all_enums import AlienPattern as AP
 from UI.all_enums import CollisionsStates as CS
 from Play_Screen.boss import Boss
+from UI.all_enums import BossPattern as BP
 
 class Horde:
     """A class to handle all alien methods and things"""
@@ -48,6 +49,7 @@ class Horde:
         self._fire_shooter_aliens()
 
     def _check_bullet_collisions(self):
+        """Check the alien projectile collisions with the ship (and shield with beam)"""
         if self.alien_pattern == AP.THREEROWS or self.alien_pattern == AP.BASIC:
             if pygame.sprite.spritecollide(self.ship, self.alien_bullets, True):
                 self.ai_game._ship_hit()
@@ -57,6 +59,14 @@ class Horde:
                     self.boss.ydirection = -1
                     self.boss.rect.y -= 20
                 self.ai_game._ship_hit()
+            elif self.boss.beam_hitbox:
+                if pygame.Rect.colliderect(self.ship.rect, self.boss.beam_rect):
+                    self.boss.boss_pattern = random.choice([BP.SHOOTBASIC, BP.DARTTOHIT])
+                    self.boss.ydirection = -1
+                    self.ai_game._ship_hit()
+                elif (pygame.Rect.colliderect(self.ai_game.warp_shield.rect, self.boss.beam_rect) 
+                        and self.settings.warp_up):
+                    self.ai_game._shield_hit(hits = 3, break_beam = True)
 
     def _check_alien_ship_collisions_and_update(self):
         """Update, and then check alien-ship collisions"""
@@ -71,7 +81,7 @@ class Horde:
                 if pygame.sprite.spritecollideany(self.ship, group):
                     self.ai_game._ship_hit()
         elif self.alien_pattern == AP.BOSSROOM:
-            self.boss.update(self.ai_game.boss_pattern)
+            self.boss.update()
             if pygame.sprite.spritecollide(self.ship, self.boss_shell, False):
                 self.boss.ydirection *= -1
                 self.boss.rect.y - 10

@@ -29,3 +29,4 @@ class GameStates(Enum):
 class BossPattern(Enum):
     SHOOTBASIC = 1
     DARTTOHIT = 2
+    BEAMATTACK = 3

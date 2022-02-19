@@ -96,7 +96,6 @@ class AlienInvasion:
         # Start Alien Invasion in an inactive state.
         self.stats.game_layer = GS.MAINMENU
         self.cheats = False
-        self.boss_pattern = BP.SHOOTBASIC
         self.various_alien_bullet_groups = [self.horde.alien_bullets, self.horde.boss.alien_bullets]
         self.general_play = True
         # Music
@@ -136,7 +135,6 @@ class AlienInvasion:
         self.sb.prep_level()
         self.sb.prep_ships()
         self.game_sounds.sound_channel.play(self.game_sounds.start_sound)
-        self.boss_pattern = BP.SHOOTBASIC
         self.alien_pattern = AP.THREEROWS
 
         # Get rid of any remaining aliens and bullets.
@@ -393,13 +391,23 @@ class AlienInvasion:
         if (pygame.sprite.spritecollide(self.warp_shield, 
             self.various_alien_bullet_groups[self.alien_pattern._value_ // 2], self.settings.warp_up)
             and self.settings.warp_up):
-            self.game_sounds.sound_channel.play(self.game_sounds.shield_hit)
-            self.settings.shield_hits += 1
-            # If the shield has been hit too many times, start cooldown + it's broken
-            if self.settings.shield_hits >= self.settings.allowed_hits:
-                self.settings.shield_hits = 0
-                self.warp_square.cooldown_start = True
-                self.settings.warp_up = False
+                self._shield_hit()
+    
+    def _shield_hit(self, hits = 1, break_beam = False):
+        """Shield has been hit, act accordingly"""
+        self.game_sounds.sound_channel.play(self.game_sounds.shield_hit)
+        self.settings.shield_hits += hits
+        # If the shield has been hit too many times, start cooldown + it's broken
+        if self.settings.shield_hits >= self.settings.allowed_hits:
+            self.settings.shield_hits = 0
+            self.warp_square.cooldown_start = True
+            self.settings.warp_up = False
+        if break_beam:
+            self.horde.boss.switch_time = True
+            self.horde.boss.number_screen_hits = 0
+            self.horde.boss.delayed_frames = 1000
+            if self.horde.boss.rect.bottom > 500:
+                self.horde.boss.rect.bottom = 500
 
     def _new_level(self):
         """ Destroy existing bullets and create new fleet. """
@@ -482,13 +490,13 @@ class AlienInvasion:
             elif self.alien_pattern == AP.BOSSROOM:
                 temp_health = self.horde.boss.health
                 temp_coords = self.horde.boss.rect.center
-                temp_pattern = self.boss_pattern
+                temp_pattern = self.horde.boss.boss_pattern
                 temp_directions = [self.horde.boss.xdirection, self.horde.boss.ydirection]
                 self.horde.boss = Boss(self.horde, health=temp_health, coords=temp_coords, directions=temp_directions)
                 self.horde.boss_shell.add(self.horde.boss)
                 self.various_alien_bullet_groups = [self.horde.alien_bullets, 
                             self.horde.boss.alien_bullets]
-                self.boss_pattern = temp_pattern
+                self.horde.boss.boss_pattern = temp_pattern
                 self.horde.boss.healthbar._update_health()
                 sleep(1)
                 #self.horde.boss.cut_scene()
