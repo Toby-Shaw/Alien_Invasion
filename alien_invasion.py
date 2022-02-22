@@ -95,7 +95,7 @@ class AlienInvasion:
 
         # Start Alien Invasion in an inactive state.
         self.stats.game_layer = GS.MAINMENU
-        self.cheats = False
+        self.cheats = True
         self.various_alien_bullet_groups = [self.horde.alien_bullets, self.horde.boss.alien_bullets]
         self.general_play = True
         # Music
@@ -129,6 +129,8 @@ class AlienInvasion:
         # Reset the game statistics.
         self.stats.reset_stats()
         self.settings.initialize_dynamic_settings()
+        self.strong_bullet_square = AbilityButton(self, "B", 130)
+        self.warp_square = AbilityButton(self, "S", 230)
         self.warp_square._reset_cooldown()
         self.strong_bullet_square._reset_cooldown()
         self.sb.prep_score()
@@ -139,6 +141,7 @@ class AlienInvasion:
 
         # Get rid of any remaining aliens and bullets.
         self.horde.aliens.empty()
+        self.horde.boss.alien_bullets.empty()
         self.bullets.empty()
         for group in self.horde.three_columns_group:
             group.empty()
@@ -146,6 +149,7 @@ class AlienInvasion:
         self.horde.boss_shell.empty()
 
         # Create a new fleet and center the ship.
+        self.horde.alien_pattern = self.alien_pattern
         self.horde._create_fleet()
         self.ship.center_ship()  
 
@@ -393,7 +397,7 @@ class AlienInvasion:
             and self.settings.warp_up):
                 self._shield_hit()
     
-    def _shield_hit(self, hits = 1, break_beam = False):
+    def _shield_hit(self, hits = 1):
         """Shield has been hit, act accordingly"""
         self.game_sounds.sound_channel.play(self.game_sounds.shield_hit)
         self.settings.shield_hits += hits
@@ -402,12 +406,6 @@ class AlienInvasion:
             self.settings.shield_hits = 0
             self.warp_square.cooldown_start = True
             self.settings.warp_up = False
-        if break_beam:
-            self.horde.boss.switch_time = True
-            self.horde.boss.number_screen_hits = 0
-            self.horde.boss.delayed_frames = 1000
-            if self.horde.boss.rect.bottom > 500:
-                self.horde.boss.rect.bottom = 500
 
     def _new_level(self):
         """ Destroy existing bullets and create new fleet. """

@@ -52,6 +52,9 @@ class Boss(Sprite):
         self.beam_active = False
         self.beam_cooldown = 0
         self.beam_hitbox = False
+        self.beam_stage = 1
+        self.buildup = False
+        self.beam_switch = 0
         # Start pattern and time
         self.time_start = time.time()
         self.boss_pattern = random.choice(list(self.all_patterns.keys()))
@@ -59,7 +62,7 @@ class Boss(Sprite):
     def draw(self):
         """Draw the boss"""
         self.screen.blit(self.base_image, self.rect)
-        if self.beam_active:
+        if self.beam_hitbox or self.buildup:
             self.screen.fill(self.beam_color, self.beam_rect)
 
     def update(self):
@@ -102,7 +105,7 @@ class Boss(Sprite):
         elif pattern == BP.DARTTOHIT:
             self._dart_movement()
         elif pattern == BP.BEAMATTACK:
-            self._beam_movement()
+            self._beam_check()
 
     def _shoot_basic_movement(self):
         """Basic side to side movement"""
@@ -137,26 +140,42 @@ class Boss(Sprite):
                 self.switch_time = True
                 self.number_screen_hits = 0
 
-    def _beam_movement(self):
+    def _beam_check(self):
         """The pattern progression for firing the beam"""
         if not self.beam_active:
                 self._fire_beam()
         elif self.beam_rect.width <= 30:
             self._beam_buildup()
-        else:
+        elif self.beam_stage == 1:
+            self.buildup = False
             self.beam_hitbox = True
-            self.x += 2.5 * self.xdirection
-            self.rect.x = self.x
-            self.beam_rect.top = self.rect.bottom
-            self.beam_rect.centerx = self.rect.centerx + 1
-            # Misleading name here, TB fixed later
-            self.number_screen_hits = time.time() - self.time_start
-            if self._check_screen_edges() == 0:
-                self.xdirection *= -1
-                self.rect.x -= 6 * self.xdirection
-            elif self.number_screen_hits >= self.needed_screen_hits:
-                self.switch_time = True
-                self.number_screen_hits = 0
+            if self.beam_rect.height != 800:
+                self.beam_rect.height = 800
+            self._beam_movement()
+            if time.time() % 1.5 <= 0.9 and self.beam_switch > 50:
+                self.beam_switch = 0
+                self.beam_stage = 0
+        elif self.beam_stage == 0:
+            self.beam_hitbox = False
+            self._beam_movement()
+            if time.time() % 1.5 > 0.9 and self.beam_switch > 50:
+                self.beam_switch = 0
+                self.beam_stage = 1
+        self.beam_switch += 1
+
+    def _beam_movement(self):
+        self.x += 3.5 * self.xdirection
+        self.rect.x = self.x
+        self.beam_rect.top = self.rect.bottom
+        self.beam_rect.centerx = self.rect.centerx + 1
+        # Misleading name here, TB fixed later
+        self.number_screen_hits = time.time() - self.time_start
+        if self._check_screen_edges() == 0:
+            self.xdirection *= -1
+            self.rect.x -= 6 * self.xdirection
+        elif self.number_screen_hits >= self.needed_screen_hits:
+            self.switch_time = True
+            self.number_screen_hits = 0
 
     def _reset_beam(self):
         """Put the rect and color back to the beginning"""
@@ -169,6 +188,8 @@ class Boss(Sprite):
         """Start the firing process"""
         self._beam_buildup()
         self.beam_active = True
+        self.beam_stage = 1
+        self.buildup = True
 
     def _beam_buildup(self):
         """Widen the beam and darken the color"""
