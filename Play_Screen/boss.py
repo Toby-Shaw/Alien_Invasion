@@ -1,3 +1,4 @@
+from tokenize import group
 import pygame
 from UI.all_enums import AlienPattern as AP
 from UI.all_enums import BossPattern as BP
@@ -31,6 +32,10 @@ class Boss(Sprite):
         # Shooting things
         self.alien_bullets = pygame.sprite.Group()
         self.time_since_shot = 0
+        self.group_space = 0
+        self.number_bullets = 0
+        self.rapid_fire = False
+        self.groups_fired = 0
         # Cutscene things
         self.previous_step = 0
         self.number_steps = 0
@@ -39,9 +44,10 @@ class Boss(Sprite):
             # 1 = right/down, left = -1/up
         self.xdirection = directions[0]
         self.ydirection = directions[1]
-        self.all_patterns = {BP.SHOOTBASIC: random.randint(2, 4), 
-                BP.DARTTOHIT: random.randint(1, 5), BP.BEAMATTACK: random.randint(4, 7)}
+        self.all_patterns = {BP.SHOOTBASIC: random.randint(2, 4), BP.MACHINEGUN: random.randint(6, 10),
+                BP.DARTTOHIT: random.randint(1, 5), BP.BEAMATTACK: random.randint(4, 7), BP.DARTWITHFASTFIRE: random.randint(1, 4)}
         self.shooter_patterns = (BP.SHOOTBASIC, BP.DARTTOHIT)
+        self.gunner_patterns = (BP.MACHINEGUN, BP.DARTWITHFASTFIRE)
         # Switching pattern things
         self.switch_time = False
         self.number_screen_hits = 0
@@ -70,6 +76,8 @@ class Boss(Sprite):
         """Shoot, move, and switch patterns if needed"""
         if self.boss_pattern in self.shooter_patterns:
             self._shoot_bullet()
+        elif self.boss_pattern in self.gunner_patterns:
+            self._rapid_fire(spacing = self.boss_pattern._value_)
         self._move_accordingly(self.boss_pattern)
         self._update_alien_bullets()
         if self.switch_time:
@@ -94,8 +102,8 @@ class Boss(Sprite):
             del self.available_patterns[self.boss_pattern]
             self.boss_pattern = random.choice(list(self.available_patterns.keys()))
             self.needed_screen_hits = self.available_patterns[self.boss_pattern]
-            self.all_patterns = {BP.SHOOTBASIC: random.randint(2, 4), 
-                BP.DARTTOHIT: random.randint(1, 5), BP.BEAMATTACK: random.randint(4, 7)}
+            self.all_patterns = {BP.SHOOTBASIC: random.randint(2, 4), BP.MACHINEGUN: random.randint(5, 10),
+                BP.DARTTOHIT: random.randint(1, 5), BP.BEAMATTACK: random.randint(4, 6), BP.DARTWITHFASTFIRE: random.randint(1, 4)}
             self.time_start = time.time()
         self.delayed_frames += 1
 
@@ -103,16 +111,18 @@ class Boss(Sprite):
         """Move based on the pattern"""
         if pattern == BP.SHOOTBASIC:
             self._shoot_basic_movement()
-        elif pattern == BP.DARTTOHIT:
+        elif pattern == BP.DARTTOHIT or pattern == BP.DARTWITHFASTFIRE:
             self._dart_movement()
         elif pattern == BP.BEAMATTACK:
             self._beam_check()
+        elif pattern == BP.MACHINEGUN:
+            self._shoot_basic_movement(switch_covered=False)
 
-    def _shoot_basic_movement(self):
+    def _shoot_basic_movement(self, switch_covered = True):
         """Basic side to side movement"""
         self.x += 5.5 * self.xdirection
         self.rect.x = self.x
-        if self.number_screen_hits >= self.needed_screen_hits:
+        if self.number_screen_hits >= self.needed_screen_hits and switch_covered:
             self.number_screen_hits = 0
             self.switch_time = True
         if self._check_screen_edges() == 0:
@@ -147,16 +157,16 @@ class Boss(Sprite):
                 self._fire_beam()
         elif self.beam_rect.width <= 30:
             self._beam_buildup()
+        # stage one is with hitbox, 0.65 seconds
         elif self.beam_stage == 1:
             self.buildup = False
             self.beam_hitbox = True
-            #if self.beam_rect.height != 800:
-                #self.beam_rect.height = 800
             self._beam_movement()
             if time.time() % 1 <= 0.65 and self.beam_switch > 50:
                 self.shots_fired += 1
                 self.beam_switch = 0
                 self.beam_stage = 0
+        # stage zero is off, will go for .35 seconds
         elif self.beam_stage == 0:
             self.beam_hitbox = False
             self._beam_movement()
@@ -167,15 +177,15 @@ class Boss(Sprite):
         self.beam_switch += 1
 
     def _beam_movement(self):
+        """Movement of the beam pattern"""
         self.x += 3.5 * self.xdirection
         self.rect.x = self.x
         self.beam_rect.top = self.rect.bottom
         self.beam_rect.centerx = self.rect.centerx + 1
-        # Misleading name here, TB fixed later
-        #self.number_screen_hits = time.time() - self.time_start
         if self._check_screen_edges() == 0:
             self.xdirection *= -1
             self.rect.x -= 6 * self.xdirection
+        # do the pattern switch check
         elif self.shots_fired >= self.needed_screen_hits:
             self.switch_time = True
             self.shots_fired = 0
@@ -191,7 +201,6 @@ class Boss(Sprite):
     def _fire_beam(self):
         """Start the firing process"""
         self._beam_buildup()
-        self.shots_fired = 0
         self.beam_active = True
         self.beam_stage = 1
         self.buildup = True
@@ -231,6 +240,28 @@ class Boss(Sprite):
             new_bullet = AlienBullet(self.ai_game, self)
             self.alien_bullets.add(new_bullet)
         self.time_since_shot += 1
+
+    def _rapid_fire(self, groupnumber = 3, cooldown = 20, spacing = 5):
+        """Fire groups of bullets rapidly"""
+        if self.group_space >= cooldown or self.rapid_fire:
+            self.rapid_fire = True
+            self.group_space = 0
+            # spacing between shots within a group
+            if self.time_since_shot > spacing:
+                self.time_since_shot = 0
+                self.number_bullets += 1
+                new_bullet = AlienBullet(self.ai_game, self)
+                self.alien_bullets.add(new_bullet)
+            self.time_since_shot += 1
+            if self.number_bullets >= groupnumber:
+                self.groups_fired += 1
+                self.number_bullets = 0
+                self.rapid_fire = False
+        elif not self.rapid_fire:
+            self.group_space += 1
+        if self.groups_fired >= self.needed_screen_hits:
+            self.switch_time = True
+            self.groups_fired = 0
     
     def cut_scene(self):
         """Start the boss intro cutscene"""
