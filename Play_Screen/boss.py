@@ -40,7 +40,7 @@ class Boss(Sprite):
         self.xdirection = directions[0]
         self.ydirection = directions[1]
         self.all_patterns = {BP.SHOOTBASIC: random.randint(2, 4), 
-                BP.DARTTOHIT: random.randint(1, 5), BP.BEAMATTACK: random.randint(4, 5)}
+                BP.DARTTOHIT: random.randint(1, 5), BP.BEAMATTACK: random.randint(4, 7)}
         self.shooter_patterns = (BP.SHOOTBASIC, BP.DARTTOHIT)
         # Switching pattern things
         self.switch_time = False
@@ -55,6 +55,7 @@ class Boss(Sprite):
         self.beam_stage = 1
         self.buildup = False
         self.beam_switch = 0
+        self.shots_fired = 0
         # Start pattern and time
         self.time_start = time.time()
         self.boss_pattern = random.choice(list(self.all_patterns.keys()))
@@ -94,7 +95,7 @@ class Boss(Sprite):
             self.boss_pattern = random.choice(list(self.available_patterns.keys()))
             self.needed_screen_hits = self.available_patterns[self.boss_pattern]
             self.all_patterns = {BP.SHOOTBASIC: random.randint(2, 4), 
-                BP.DARTTOHIT: random.randint(1, 5), BP.BEAMATTACK: random.randint(4, 5)}
+                BP.DARTTOHIT: random.randint(1, 5), BP.BEAMATTACK: random.randint(4, 7)}
             self.time_start = time.time()
         self.delayed_frames += 1
 
@@ -149,17 +150,19 @@ class Boss(Sprite):
         elif self.beam_stage == 1:
             self.buildup = False
             self.beam_hitbox = True
-            if self.beam_rect.height != 800:
-                self.beam_rect.height = 800
+            #if self.beam_rect.height != 800:
+                #self.beam_rect.height = 800
             self._beam_movement()
-            if time.time() % 1.5 <= 0.9 and self.beam_switch > 50:
+            if time.time() % 1 <= 0.65 and self.beam_switch > 50:
+                self.shots_fired += 1
                 self.beam_switch = 0
                 self.beam_stage = 0
         elif self.beam_stage == 0:
             self.beam_hitbox = False
             self._beam_movement()
-            if time.time() % 1.5 > 0.9 and self.beam_switch > 50:
+            if time.time() % 1 > 0.65 and self.beam_switch > 50:
                 self.beam_switch = 0
+                self.beam_rect.height = 800
                 self.beam_stage = 1
         self.beam_switch += 1
 
@@ -169,13 +172,13 @@ class Boss(Sprite):
         self.beam_rect.top = self.rect.bottom
         self.beam_rect.centerx = self.rect.centerx + 1
         # Misleading name here, TB fixed later
-        self.number_screen_hits = time.time() - self.time_start
+        #self.number_screen_hits = time.time() - self.time_start
         if self._check_screen_edges() == 0:
             self.xdirection *= -1
             self.rect.x -= 6 * self.xdirection
-        elif self.number_screen_hits >= self.needed_screen_hits:
+        elif self.shots_fired >= self.needed_screen_hits:
             self.switch_time = True
-            self.number_screen_hits = 0
+            self.shots_fired = 0
 
     def _reset_beam(self):
         """Put the rect and color back to the beginning"""
@@ -183,10 +186,12 @@ class Boss(Sprite):
         self.beam_rect = pygame.rect.Rect(0, 0, 1, 800)
         self.beam_color = (200, 255, 200)
         self.beam_hitbox = False
+        self.shots_fired = 0
 
     def _fire_beam(self):
         """Start the firing process"""
         self._beam_buildup()
+        self.shots_fired = 0
         self.beam_active = True
         self.beam_stage = 1
         self.buildup = True

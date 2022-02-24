@@ -62,8 +62,8 @@ class Horde:
             elif self.boss.beam_hitbox:
                 if self.settings.warp_up and pygame.Rect.colliderect(self.ai_game.warp_shield.rect, self.boss.beam_rect):
                     self.ai_game._shield_hit(hits = 3)
-                    self.boss.beam_rect = pygame.rect.Rect(self.boss.rect.centerx, self.boss.rect.bottom, 30, self.ai_game.ship.rect.top - self.boss.rect.bottom - 1)
-                if pygame.Rect.colliderect(self.ship.rect, self.boss.beam_rect):
+                    self.boss.beam_rect.height = (self.ai_game.warp_shield.rect.top - self.boss.rect.bottom - 20)
+                elif pygame.Rect.colliderect(self.ship.rect, self.boss.beam_rect):
                     self.boss.boss_pattern = random.choice([BP.SHOOTBASIC, BP.DARTTOHIT])
                     self.boss.ydirection = -1
                     self.ai_game._ship_hit()
