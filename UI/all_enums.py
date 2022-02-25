@@ -32,3 +32,4 @@ class BossPattern(Enum):
     BEAMATTACK = 3
     MACHINEGUN = 5
     DARTWITHFASTFIRE = 10
+    DIAGONAL = 6

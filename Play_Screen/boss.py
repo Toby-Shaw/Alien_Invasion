@@ -44,9 +44,9 @@ class Boss(Sprite):
             # 1 = right/down, left = -1/up
         self.xdirection = directions[0]
         self.ydirection = directions[1]
-        self.all_patterns = {BP.SHOOTBASIC: random.randint(2, 4), BP.MACHINEGUN: random.randint(6, 10),
+        self.all_patterns = {BP.SHOOTBASIC: random.randint(2, 4), BP.MACHINEGUN: random.randint(6, 10), BP.DIAGONAL: random.randint(4, 8),
                 BP.DARTTOHIT: random.randint(1, 5), BP.BEAMATTACK: random.randint(4, 7), BP.DARTWITHFASTFIRE: random.randint(1, 4)}
-        self.shooter_patterns = (BP.SHOOTBASIC, BP.DARTTOHIT)
+        self.shooter_patterns = (BP.SHOOTBASIC, BP.DARTTOHIT, BP.DIAGONAL)
         self.gunner_patterns = (BP.MACHINEGUN, BP.DARTWITHFASTFIRE)
         # Switching pattern things
         self.switch_time = False
@@ -100,9 +100,11 @@ class Boss(Sprite):
             self.switch_time = False
             self.available_patterns = self.all_patterns.copy()
             del self.available_patterns[self.boss_pattern]
+            if self.health >= self.max_hp / 2:
+                del self.available_patterns[BP.DIAGONAL]
             self.boss_pattern = random.choice(list(self.available_patterns.keys()))
             self.needed_screen_hits = self.available_patterns[self.boss_pattern]
-            self.all_patterns = {BP.SHOOTBASIC: random.randint(2, 4), BP.MACHINEGUN: random.randint(5, 10),
+            self.all_patterns = {BP.SHOOTBASIC: random.randint(2, 4), BP.MACHINEGUN: random.randint(5, 10), BP.DIAGONAL: random.randint(4, 8),
                 BP.DARTTOHIT: random.randint(1, 5), BP.BEAMATTACK: random.randint(4, 6), BP.DARTWITHFASTFIRE: random.randint(1, 4)}
             self.time_start = time.time()
         self.delayed_frames += 1
@@ -117,6 +119,8 @@ class Boss(Sprite):
             self._beam_check()
         elif pattern == BP.MACHINEGUN:
             self._shoot_basic_movement(switch_covered=False)
+        elif pattern == BP.DIAGONAL:
+            self._diagonal_movement()
 
     def _shoot_basic_movement(self, switch_covered = True):
         """Basic side to side movement"""
@@ -150,6 +154,25 @@ class Boss(Sprite):
             if self.rect.y <= 300 and self.number_screen_hits >= self.needed_screen_hits:
                 self.switch_time = True
                 self.number_screen_hits = 0
+
+    def _diagonal_movement(self):
+        self.y += 5.5 * self.ydirection
+        self.x += 5.5 * self.xdirection
+        self.rect.y = self.y
+        self.rect.x = self.x
+        if self._check_screen_edges() == 0:
+            self.number_screen_hits += 1
+            self.xdirection *= -1
+            self.x += 30 * self.xdirection
+            self.rect.x = self.x
+        if self._check_screen_edges() == 1:
+            self.number_screen_hits += 1
+            self.ydirection *= -1
+            self.y += 30 * self.ydirection
+            self.rect.y = self.y
+        elif self.rect.y <= 300 and self.number_screen_hits >= self.needed_screen_hits:
+            self.switch_time = True
+            self.number_screen_hits = 0
 
     def _beam_check(self):
         """The pattern progression for firing the beam"""
