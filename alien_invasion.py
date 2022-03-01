@@ -63,6 +63,7 @@ class AlienInvasion:
         # Make the title + Pause text
         self.title = Text(self, "Alien Invasion", 110, (0, 255, 0), 
             (self.settings.screen_width / 2), 180)
+        self.title_switch = 0
         self.pause = Text(self, "Paused", 110, (0, 255, 0),
             (self.settings.screen_width / 2), 180)
         self.game_over = Text(self, "Game Over", 170, (0, 255, 0),
@@ -123,6 +124,8 @@ class AlienInvasion:
                 mouse_pos = pygame.mouse.get_pos()
                 mouse_pressed = pygame.mouse.get_pressed()
                 self._check_slider(mouse_pos, mouse_pressed[0], False)
+            elif self.stats.game_layer == GS.MAINMENU:
+                self._update_title()
             self._update_screen()
 
     def _start_game(self):
@@ -300,6 +303,19 @@ class AlienInvasion:
             self.stats.current_fps = self.clock.get_fps()
             self.stats.tick_update = 0
             self.fps_meter._prep_text(f"FPS: {round(self.stats.current_fps)}")
+
+    def _update_title(self):
+        """Update the title animation"""
+        if self.title_switch > 30:
+            self.title_switch = 0
+            if self.title.font_color == (0, 255, 0):
+                self.title.font_color = (255, 255, 255)
+                self.title.bg_color = (0, 255, 0)
+            else:
+                self.title.font_color = (0, 255, 0)
+                self.title.bg_color = self.settings.bg_color
+            self.title._prep_text("Alien Invasion")
+        self.title_switch += 1
 
     def _fire_bullet(self):
         """Create a new bullet and add it to the bullets group"""

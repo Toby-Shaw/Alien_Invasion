@@ -12,10 +12,13 @@ class Text:
         self.posy = posy
         self.font_color = font_color
         self.font = pygame.ftfont.SysFont(None, font_size)
+        self.bg_color = self.settings.bg_color
+        self.text = text
+        self.line_spacing = line_spacing
 
-        self._prep_text(text, line_spacing)
+        self._prep_text(self.text)
 
-    def _prep_text(self, text, line_spacing = 40):
+    def _prep_text(self, text):
         """Turn text into a rendered image and place it at the positions given"""
         # Fix \n issues before they occur
         neat_text = text.replace("\n       ", "")
@@ -26,14 +29,14 @@ class Text:
         counter = 0
         for line in self.text_lines:
             # Get the image for each individual line
-            self.text_list.append(self.font.render(line, True, self.font_color, self.settings.bg_color))
+            self.text_list.append(self.font.render(line, True, self.font_color, self.bg_color))
         for image in self.text_list:
             # Get the rect for each individual image
             self.text_rect_list.append(image.get_rect())
         for rect in self.text_rect_list:
             # Move all the rects to the correct spots
             rect.centerx = self.posx
-            rect.centery = self.posy + (line_spacing * counter)
+            rect.centery = self.posy + (self.line_spacing * counter)
             counter += 1
 
     def draw_text(self):
