@@ -306,7 +306,7 @@ class AlienInvasion:
 
     def _update_title(self):
         """Update the title animation"""
-        if self.title_switch > 30:
+        if self.title_switch > 100:
             self.title_switch = 0
             if self.title.font_color == (0, 255, 0):
                 self.title.font_color = (255, 255, 255)
@@ -560,6 +560,9 @@ class AlienInvasion:
             
         # Draw the main menu when appropriate.
         elif self.stats.game_layer == GS.MAINMENU:
+            if self.title.font_color != (0, 255, 0):
+                pygame.draw.ellipse(self.screen, (0, 255, 0), (150, self.title.text_rect_list[0].top - 50, self.settings.screen_width - 300, 
+                    self.title.text_rect_list[0].bottom - 50))
             self.title.draw_text()
             self.play_button.draw_button()
             self.info.draw_button()

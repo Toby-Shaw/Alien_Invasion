@@ -102,6 +102,8 @@ class Boss(Sprite):
             del self.available_patterns[self.boss_pattern]
             if self.health >= self.max_hp / 2:
                 del self.available_patterns[BP.DIAGONAL]
+            else:
+                self.available_patterns.append[BP.DIAGONAL]
             self.boss_pattern = random.choice(list(self.available_patterns.keys()))
             self.needed_screen_hits = self.available_patterns[self.boss_pattern]
             self.all_patterns = {BP.SHOOTBASIC: random.randint(2, 4), BP.MACHINEGUN: random.randint(5, 10), BP.DIAGONAL: random.randint(4, 8),
