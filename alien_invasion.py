@@ -23,6 +23,7 @@ from game_sounds import GameSounds
 from UI.slider import Slider
 from Play_Screen.boss import Boss
 from UI.all_enums import BossPattern as BP
+from UI.key_checker import *
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -123,7 +124,7 @@ class AlienInvasion:
                 # update the sliders each frame if necessary
                 mouse_pos = pygame.mouse.get_pos()
                 mouse_pressed = pygame.mouse.get_pressed()
-                self._check_slider(mouse_pos, mouse_pressed[0], False)
+                check_slider(self, mouse_pos, mouse_pressed[0], False)
             elif self.stats.game_layer == GS.MAINMENU:
                 self._update_title()
             self._update_screen()
@@ -169,131 +170,19 @@ class AlienInvasion:
                 high_score.write(str(self.stats.high_score))
                 sys.exit()
             elif event.type == pygame.KEYUP:
-                self._check_keyup_events(event)
+                check_keyup_events(self, event)
             if self.general_play:
                 if event.type == pygame.KEYDOWN:
-                    self._check_keydown_events(event)
+                    check_keydown_events(self, event)
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
-                    self._check_main_buttons(mouse_pos)
-                    self._check_pause_buttons(mouse_pos)
-                    self._check_over_buttons(mouse_pos)
-                    self._check_slider(mouse_pos, True, True)
+                    check_main_buttons(self, mouse_pos)
+                    check_pause_buttons(self, mouse_pos)
+                    check_over_buttons(self, mouse_pos)
+                    check_slider(self, mouse_pos, True, True)
                 elif event.type == pygame.MOUSEBUTTONUP:
                     self.music_slider.clicked = False
                     self.sound_slider.clicked = False
-                
-    def _check_main_buttons(self, mouse_pos):
-        """Check the main screen buttons"""
-        button_clicked = self.play_button.rect.collidepoint(mouse_pos)
-        if self.stats.game_layer == GS.MAINMENU:
-            if button_clicked:
-            # Reset the game settings.
-                self._start_game()
-            elif self.info.rect.collidepoint(mouse_pos):
-            # Go to info screen
-                self.stats.game_layer = GS.INFOSCREEN
-            elif self.settings_button.rect.collidepoint(mouse_pos):
-                self.previous_layer = GS.MAINMENU
-                self.stats.game_layer = GS.SETTINGS
-
-    def _check_pause_buttons(self, mouse_pos):
-        """Check pause screen buttons"""
-        if self.stats.game_layer == GS.PAUSEMENU:
-            if self.main_menu.rect.collidepoint(mouse_pos):
-                # Return to the main menu if clicked
-                if self.alien_pattern == AP.BOSSROOM:
-                    self.game_sounds.change_back()
-                self.stats.game_layer = GS.MAINMENU
-            elif self.resume.rect.collidepoint(mouse_pos):
-                # Return to the game if clicked
-                self.stats.game_layer = GS.PLAYSCREEN
-                pygame.mouse.set_visible(False)
-            elif self.settings_button.rect.collidepoint(mouse_pos):
-                self.previous_layer = GS.PAUSEMENU
-                self.stats.game_layer = GS.SETTINGS
-
-    def _check_over_buttons(self, mouse_pos):
-        """Check end screen buttons"""
-        if self.stats.game_layer == GS.ENDSCREEN:
-            if self.main_menu.rect.collidepoint(mouse_pos):
-                self.stats.game_layer = GS.MAINMENU
-
-    def _check_slider(self, mouse_pos, mouse_pressed, new_click):
-        """Check the settings sliders"""
-        if self.stats.game_layer == GS.SETTINGS and mouse_pressed:
-            self.music_slider.update(mouse_pos, new_click)
-            self.sound_slider.update(mouse_pos, new_click)
-
-    def _check_keydown_events(self, event):
-        """Respond to keypresses"""
-        if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-            self.ship.moving_right = True
-        elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
-            self.ship.moving_left = True
-        elif event.key == pygame.K_SPACE:
-            if self.stats.game_layer == GS.MAINMENU:
-                self._start_game()
-            elif self.stats.game_layer == GS.PLAYSCREEN:
-                self.game_sounds.sound_channel.play(self.game_sounds.bullet_fired, 0, 500)
-                self._fire_bullet()
-            elif self.stats.game_layer == GS.PAUSEMENU:
-                self.stats.game_layer = GS.PLAYSCREEN
-        elif event.key == pygame.K_p:
-            if self.stats.game_layer == GS.MAINMENU:
-                self._start_game()
-        elif event.key == pygame.K_DOWN or event.key == pygame.K_s:
-            if self.settings.normal_bullet and self.strong_bullet_square.cooldown_up and self.stats.game_layer == GS.PLAYSCREEN:
-                self.game_sounds.sound_channel.play(self.game_sounds.strong_start, 0, 550)
-                self.settings.strong_bullet()
-                self.strong_bullet_square.covering = True
-        elif event.key == pygame.K_UP or event.key == pygame.K_w:
-            if not self.settings.warp_up and self.warp_square.cooldown_up and self.stats.game_layer == GS.PLAYSCREEN:
-                self.game_sounds.sound_channel.play(self.game_sounds.shield_up)
-                self.settings.warp_up = True
-                self.warp_square.covering = True
-        elif event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
-            self._check_escape_events()
-        elif event.key == pygame.K_b and self.cheats == True:
-            for group in self.horde.three_columns_group:
-                group.empty()
-        elif event.key == pygame.K_n and self.cheats == True:
-            self.horde.boss.health -= 100
-            self.horde.boss.healthbar._update_health()
-
-    def _check_escape_events(self):
-        """Change screens when q is pressed"""
-        if self.stats.game_layer == GS.PLAYSCREEN:
-            # Go to pause screen if on game screen
-            self.stats.game_layer = GS.PAUSEMENU
-            pygame.mouse.set_visible(True)
-        elif self.stats.game_layer == GS.PAUSEMENU:
-            # If on pause, go to the main menu
-            high_score = open("Games/Alien_Invasion/high_score.txt", "w")
-            high_score.write(str(self.stats.high_score))
-            self.stats.game_layer = GS.MAINMENU
-            if self.alien_pattern == AP.BOSSROOM:
-                self.game_sounds.change_back()
-            pygame.mouse.set_visible(True)
-        elif self.stats.game_layer == GS.INFOSCREEN or self.stats.game_layer == GS.ENDSCREEN:
-            # Go back to the main menu
-            self.stats.game_layer = GS.MAINMENU
-            if self.alien_pattern == AP.BOSSROOM:
-                self.game_sounds.change_back()
-        elif self.stats.game_layer == GS.SETTINGS:
-            self.stats.game_layer = self.previous_layer
-        else:
-            # Quit if on the main menu
-            high_score = open("Games/Alien_Invasion/high_score.txt", "w")
-            high_score.write(str(self.stats.high_score))
-            sys.exit()
-
-    def _check_keyup_events(self, event):
-        """Respond to key releases."""
-        if event.key == pygame.K_RIGHT or event.key == pygame.K_d:
-            self.ship.moving_right = False
-        elif event.key == pygame.K_LEFT or event.key == pygame.K_a:
-            self.ship.moving_left = False
 
     def _update_fps(self):
         """Update clock, then update fps and visual every 100 frames"""
@@ -363,16 +252,12 @@ class AlienInvasion:
             self.collisions = pygame.sprite.spritecollide(self.horde.boss, self.bullets, True)
             if self.collisions:
                 if not self.settings.normal_bullet:
-                    if self.horde.boss.health >= 15:
-                        self.horde.boss.health -= 15
-                    elif self.horde.boss.health < 15:
-                        self.horde.boss.health = 0
+                    if self.horde.boss.health >= 15: self.horde.boss.health -= 15
+                    elif self.horde.boss.health < 15: self.horde.boss.health = 0
                     self.horde.boss.healthbar._update_health()
                 else:
-                    if self.horde.boss.health >= 7:
-                        self.horde.boss.health -= 7 
-                    elif self.horde.boss.health < 7:
-                        self.horde.boss.health = 0
+                    if self.horde.boss.health >= 7: self.horde.boss.health -= 7 
+                    elif self.horde.boss.health < 7: self.horde.boss.health = 0
                     self.horde.boss.healthbar._update_health()
         for collision in self.collision_shell:
             for aliens in collision.values():
@@ -560,7 +445,24 @@ class AlienInvasion:
             
         # Draw the main menu when appropriate.
         elif self.stats.game_layer == GS.MAINMENU:
+            # This whole mess is drawing the alien over the screen, don't mess with this
             if self.title.font_color != (0, 255, 0):
+                self.light_green = (175, 255, 175)
+                pygame.draw.line(self.screen, (0, 255, 0), (450, 200), (250, 800), width = 10)
+                pygame.draw.line(self.screen, (0, 255, 0), (self.settings.screen_width - 450, 200), (self.settings.screen_width - 250, 800), width = 10)
+                for x in range(31):
+                    if x <= 15:
+                        pygame.draw.line(self.screen, self.light_green, ((450 + (x + 1) * 10), 200), ((250 + (x + 1) * 10), 800), width = 10)
+                        pygame.draw.line(self.screen, self.light_green, ((self.settings.screen_width - 450 - (x + 15) * 10), 200), 
+                                ((self.settings.screen_width - 250 - (x + 15) * 10), 800), width = 10)
+                        pygame.draw.line(self.screen, self.light_green, (self.settings.screen_width / 2 - 3 * x, 200), 
+                                (self.settings.screen_width / 2 - 2 * x, 800),  width = 10)
+                    else:
+                        pygame.draw.line(self.screen, self.light_green, ((450 + (x + 1) * 10), 200), ((250 + (x + 1) * 10), 800), width = 10)
+                        pygame.draw.line(self.screen, self.light_green, ((self.settings.screen_width - 450 - (x - 15) * 10), 200), 
+                                ((self.settings.screen_width - 250 - (x - 15) * 10), 800), width = 10)
+                        pygame.draw.line(self.screen, self.light_green, (self.settings.screen_width / 2 + 2 * (x - 15), 200),
+                                (self.settings.screen_width / 2 + 3 * (x - 15), 800),  width = 10) 
                 pygame.draw.ellipse(self.screen, (0, 255, 0), (150, self.title.text_rect_list[0].top - 50, self.settings.screen_width - 300, 
                     self.title.text_rect_list[0].bottom - 50))
             self.title.draw_text()
