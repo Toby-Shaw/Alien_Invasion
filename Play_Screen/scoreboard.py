@@ -1,6 +1,7 @@
 import pygame.font
 from pygame.sprite import Group
 from Play_Screen.ship import Ship
+from UI.text import Text
 
 class Scoreboard:
     """A class to report scoring info."""
@@ -22,6 +23,7 @@ class Scoreboard:
         self.prep_high_score()
         self.prep_level()
         self.prep_ships()
+        self.prep_high_scores()
 
     def prep_score(self):
         """Turn the score into an image"""
@@ -82,3 +84,14 @@ class Scoreboard:
     
     def show_ships(self):
         self.ships.draw(self.screen)
+
+    def prep_high_scores(self):
+        self.list_of_high_scores = [self.stats.high_score, 0, 0, 0, 0]
+        self.high_text = ""
+        for x in range(len(self.list_of_high_scores)):
+            self.high_text += f"{x + 1} : {self.list_of_high_scores[x]}  "
+        print(self.high_text)
+        self.high_score_text = Text(self.ai_game, self.high_text, 60, (0, 0, 0), 200, 200, line_spacing=80)
+    
+    def show_high_scores(self):
+        self.high_score_text.draw_text()

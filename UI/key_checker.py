@@ -18,6 +18,8 @@ def check_main_buttons(self, mouse_pos):
         elif self.settings_button.rect.collidepoint(mouse_pos):
             self.previous_layer = GS.MAINMENU
             self.stats.game_layer = GS.SETTINGS
+        elif self.highscores_button.rect.collidepoint(mouse_pos):
+            self.stats.game_layer = GS.HIGHSCORES
 
 def check_pause_buttons(self, mouse_pos):
     """Check pause screen buttons"""
@@ -100,7 +102,7 @@ def _check_escape_events(self):
         if self.alien_pattern == AP.BOSSROOM:
             self.game_sounds.change_back()
         pygame.mouse.set_visible(True)
-    elif self.stats.game_layer == GS.INFOSCREEN or self.stats.game_layer == GS.ENDSCREEN:
+    elif self.stats.game_layer == GS.INFOSCREEN or self.stats.game_layer == GS.ENDSCREEN or self.stats.game_layer == GS.HIGHSCORES:
         # Go back to the main menu
         self.stats.game_layer = GS.MAINMENU
         self.title_switch = 0

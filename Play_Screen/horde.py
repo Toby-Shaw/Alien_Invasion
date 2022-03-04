@@ -83,7 +83,7 @@ class Horde:
         elif self.alien_pattern == AP.BOSSROOM:
             self.boss.update()
             if pygame.sprite.spritecollide(self.ship, self.boss_shell, False):
-                self.boss.ydirection *= -1
+                self.boss.ydirection = -1
                 self.boss.rect.y - 10
                 self.ai_game._ship_hit()
 

@@ -51,15 +51,17 @@ class AlienInvasion:
 
         # Make the Play button and other buttons
         self.play_button = Button(self, "Play", (0, 255, 0),
-            (self.settings.screen_width / 2), (self.settings.screen_height / 2))
+            (self.settings.screen_width / 2), (self.settings.screen_height / 2 - 50))
         self.main_menu = Button(self, "Main Menu", (0, 255, 0), 
             (self.settings.screen_width / 2), self.settings.screen_height / 2 + 100)
         self.resume = Button(self, "Resume", (0, 255, 0),
             (self.settings.screen_width / 2), (self.settings.screen_height / 2))
         self.info = Button(self, "Information", (0, 255, 0), 
-            self.settings.screen_width / 2, (self.settings.screen_height / 2 + 100))
+            self.settings.screen_width / 2, (self.settings.screen_height / 2 + 50))
         self.settings_button = Button(self, "Settings", (0, 255, 0),
-            self.settings.screen_width / 2, (self.settings.screen_height / 2 + 200))
+            self.settings.screen_width / 2, (self.settings.screen_height / 2 + 150))
+        self.highscores_button = Button(self, "Highscores", (0, 255, 0), 
+            self.settings.screen_width / 2, self.settings.screen_height / 2 + 250)
 
         # Make the title + Pause text
         self.title = Text(self, "Alien Invasion", 110, (0, 255, 0), 
@@ -425,46 +427,47 @@ class AlienInvasion:
             if self.general_play:
                 self.horde.boss.healthbar._prep_name()
                 self.horde.boss.healthbar._draw_health_bar()
-                
             self.sb.show_ships()
         self.strong_bullet_square.draw_ability_square()
         self.warp_square.draw_ability_square()
         self.warp_shield.draw_shield()
-        
+
+    def _update_main_menu(self):
+        """Draw the main screen, including alien shape and buttons"""
+        if self.title.font_color != (0, 255, 0):
+            self.light_green = (175, 255, 175)
+            pygame.draw.line(self.screen, (0, 255, 0), (450, 200), (250, 800), width = 10)
+            pygame.draw.line(self.screen, (0, 255, 0), (self.settings.screen_width - 450, 200), (self.settings.screen_width - 250, 800), width = 10)
+            for x in range(31):
+                if x <= 15:
+                    pygame.draw.line(self.screen, self.light_green, ((450 + (x + 1) * 10), 200), ((250 + (x + 1) * 10), 800), width = 10)
+                    pygame.draw.line(self.screen, self.light_green, ((self.settings.screen_width - 450 - (x + 15) * 10), 200), 
+                            ((self.settings.screen_width - 250 - (x + 15) * 10), 800), width = 10)
+                    pygame.draw.line(self.screen, self.light_green, (self.settings.screen_width / 2 - 3 * x, 200), 
+                            (self.settings.screen_width / 2 - 2 * x, 800),  width = 10)
+                else:
+                    pygame.draw.line(self.screen, self.light_green, ((450 + (x + 1) * 10), 200), ((250 + (x + 1) * 10), 800), width = 10)
+                    pygame.draw.line(self.screen, self.light_green, ((self.settings.screen_width - 450 - (x - 15) * 10), 200), 
+                            ((self.settings.screen_width - 250 - (x - 15) * 10), 800), width = 10)
+                    pygame.draw.line(self.screen, self.light_green, (self.settings.screen_width / 2 + 2 * (x - 15), 200),
+                            (self.settings.screen_width / 2 + 3 * (x - 15), 800),  width = 10) 
+            pygame.draw.ellipse(self.screen, (0, 255, 0), (150, self.title.text_rect_list[0].top - 50, self.settings.screen_width - 300, 
+                self.title.text_rect_list[0].bottom - 50))
+        self.title.draw_text()
+        self.play_button.draw_button()
+        self.info.draw_button()
+        self.settings_button.draw_button()
+        self.highscores_button.draw_button()
+
     def _update_screen(self):
         """Update images on the screen, and flip to the new screen."""
         self.screen.fill(self.settings.bg_color)
         # Draw the play screen when appropriate
         if self.stats.game_layer == GS.PLAYSCREEN:
             self._update_play_screen()
-            
         # Draw the main menu when appropriate.
         elif self.stats.game_layer == GS.MAINMENU:
-            # This whole mess is drawing the alien over the screen, don't mess with this
-            if self.title.font_color != (0, 255, 0):
-                self.light_green = (175, 255, 175)
-                pygame.draw.line(self.screen, (0, 255, 0), (450, 200), (250, 800), width = 10)
-                pygame.draw.line(self.screen, (0, 255, 0), (self.settings.screen_width - 450, 200), (self.settings.screen_width - 250, 800), width = 10)
-                for x in range(31):
-                    if x <= 15:
-                        pygame.draw.line(self.screen, self.light_green, ((450 + (x + 1) * 10), 200), ((250 + (x + 1) * 10), 800), width = 10)
-                        pygame.draw.line(self.screen, self.light_green, ((self.settings.screen_width - 450 - (x + 15) * 10), 200), 
-                                ((self.settings.screen_width - 250 - (x + 15) * 10), 800), width = 10)
-                        pygame.draw.line(self.screen, self.light_green, (self.settings.screen_width / 2 - 3 * x, 200), 
-                                (self.settings.screen_width / 2 - 2 * x, 800),  width = 10)
-                    else:
-                        pygame.draw.line(self.screen, self.light_green, ((450 + (x + 1) * 10), 200), ((250 + (x + 1) * 10), 800), width = 10)
-                        pygame.draw.line(self.screen, self.light_green, ((self.settings.screen_width - 450 - (x - 15) * 10), 200), 
-                                ((self.settings.screen_width - 250 - (x - 15) * 10), 800), width = 10)
-                        pygame.draw.line(self.screen, self.light_green, (self.settings.screen_width / 2 + 2 * (x - 15), 200),
-                                (self.settings.screen_width / 2 + 3 * (x - 15), 800),  width = 10) 
-                pygame.draw.ellipse(self.screen, (0, 255, 0), (150, self.title.text_rect_list[0].top - 50, self.settings.screen_width - 300, 
-                    self.title.text_rect_list[0].bottom - 50))
-            self.title.draw_text()
-            self.play_button.draw_button()
-            self.info.draw_button()
-            self.settings_button.draw_button()
-            
+            self._update_main_menu()
         # Draw the pause screen when appropriate
         elif self.stats.game_layer == GS.PAUSEMENU:
             self.pause.draw_text()
@@ -485,6 +488,9 @@ class AlienInvasion:
             self.music_text.draw_text()
             self.music_slider._draw_slider()
             self.sound_slider._draw_slider()
+
+        elif self.stats.game_layer == GS.HIGHSCORES:
+            self.sb.show_high_scores()
 
         # Draw the fps screen on every screen
         self.fps_meter.draw_text()
