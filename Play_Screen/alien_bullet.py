@@ -2,10 +2,10 @@ import pygame
 from pygame.sprite import Sprite
 
 class AlienBullet(Sprite):
-    """A class to manage bullets fired from the ship"""
+    """A class to manage bullets fired from the alien fleet/boss"""
 
     def __init__(self, ai_game, alien):
-        """Create a bullet object at the ship's current position."""
+        """Create a bullet object at the alien's current position."""
         super().__init__()
         self.screen = ai_game.screen
         self.settings = ai_game.settings

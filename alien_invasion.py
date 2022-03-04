@@ -242,7 +242,6 @@ class AlienInvasion:
             self.collisions = pygame.sprite.groupcollide(
             self.bullets, self.horde.aliens, self.settings.normal_bullet, True)
             self.collision_shell.append(self.collisions)
-        # Have to check collisions for each group separately unfortunately
         elif self.alien_pattern == AP.THREEROWS:
             for index in range(len(self.horde.three_columns_group)):
                 self.collisions = pygame.sprite.groupcollide(
@@ -328,8 +327,8 @@ class AlienInvasion:
             self.ship.center_ship()
             self.horde.boss.cut_scene()
         elif self.stats.level % 5 == 1 and self.stats.level != 1:
-            self.warp_square = AbilityButton(self, "S", 230)
-            self.strong_bullet_square = AbilityButton(self, "B", 130)
+            self.warp_square = AbilityButton(self, "S", 170)
+            self.strong_bullet_square = AbilityButton(self, "B", 70)
             self.game_sounds.change_back()
         if self.alien_pattern == AP.THREEROWS or self.alien_pattern == AP.BASIC:
             self.horde._create_fleet()
@@ -380,7 +379,6 @@ class AlienInvasion:
             self.settings.alien_speed *= 0.95
             self.settings.bullet_speed *= 0.95
 
-            # Pause.
             # Create a new fleet and center the ship.
             if self.alien_pattern == AP.BASIC or self.alien_pattern == AP.THREEROWS:
                 self.horde._create_fleet()
@@ -397,9 +395,7 @@ class AlienInvasion:
                             self.horde.boss.alien_bullets]
                 self.horde.boss.boss_pattern = temp_pattern
                 self.horde.boss.healthbar._update_health()
-                sleep(1)
-                #self.horde.boss.cut_scene()
-                #self.ship.center_ship()  
+                sleep(1) 
         else:
             self.stats.game_layer = GS.ENDSCREEN
             self.alien_pattern = AP.THREEROWS
@@ -434,7 +430,6 @@ class AlienInvasion:
         self.strong_bullet_square.draw_ability_square()
         self.warp_square.draw_ability_square()
         self.warp_shield.draw_shield()
-        
         
     def _update_screen(self):
         """Update images on the screen, and flip to the new screen."""
@@ -493,7 +488,6 @@ class AlienInvasion:
 
         # Draw the fps screen on every screen
         self.fps_meter.draw_text()
-        #self.boss.draw()
         
         pygame.display.flip()
 

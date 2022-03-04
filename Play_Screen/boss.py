@@ -1,10 +1,10 @@
-from tokenize import group
 import pygame
 from UI.all_enums import AlienPattern as AP
 from UI.all_enums import BossPattern as BP
 from Play_Screen.alien_bullet import AlienBullet
 import time
 import random
+from random import randint as ri
 from pygame.sprite import Sprite
 from Play_Screen.healthbar import HealthBar
 
@@ -44,15 +44,16 @@ class Boss(Sprite):
             # 1 = right/down, left = -1/up
         self.xdirection = directions[0]
         self.ydirection = directions[1]
-        self.all_patterns = {BP.SHOOTBASIC: random.randint(2, 4), BP.MACHINEGUN: random.randint(6, 10), BP.DIAGONAL: random.randint(4, 8),
-                BP.DARTTOHIT: random.randint(1, 5), BP.BEAMATTACK: random.randint(4, 7), BP.DARTWITHFASTFIRE: random.randint(1, 4)}
+        self.all_patterns = {BP.SHOOTBASIC: ri(2, 4), BP.MACHINEGUN: ri(6, 10),
+                BP.DIAGONAL: ri(4, 8), BP.DARTTOHIT: ri(1, 5), 
+                BP.BEAMATTACK: ri(4, 7), BP.DARTWITHFASTFIRE: ri(1, 4)}
         self.shooter_patterns = (BP.SHOOTBASIC, BP.DARTTOHIT, BP.DIAGONAL)
         self.gunner_patterns = (BP.MACHINEGUN, BP.DARTWITHFASTFIRE)
         # Switching pattern things
         self.switch_time = False
         self.number_screen_hits = 0
-        self.needed_screen_hits = random.randint(1, 3)
-        self.delay_frames = random.randint(5, 140)
+        self.needed_screen_hits = ri(1, 3)
+        self.delay_frames = ri(5, 140)
         self.delayed_frames = 0
         # Beam things
         self.beam_active = False
@@ -64,7 +65,15 @@ class Boss(Sprite):
         self.shots_fired = 0
         # Start pattern and time
         self.time_start = time.time()
-        self.boss_pattern = random.choice(list(self.all_patterns.keys()))
+        self.boss_stage = 1
+        self.stage_one_weights = {BP.SHOOTBASIC : 20, BP.MACHINEGUN: 20, BP.DIAGONAL: 0, 
+                BP.DARTTOHIT: 30, BP.BEAMATTACK: 10, BP.DARTWITHFASTFIRE: 20}
+        self.stage_two_weights = {BP.SHOOTBASIC : 10, BP.MACHINEGUN: 15, BP.DIAGONAL: 30, 
+                BP.DARTTOHIT: 20, BP.BEAMATTACK: 10, BP.DARTWITHFASTFIRE: 15}
+        self.stage_weights = (0, self.stage_one_weights, self.stage_two_weights)
+        #print(self.all_patterns.keys())
+        self.boss_pattern = random.choices(list(self.all_patterns.keys()), 
+                weights = self.stage_one_weights.values())[0]
     
     def draw(self):
         """Draw the boss"""
@@ -95,19 +104,18 @@ class Boss(Sprite):
         if self.delayed_frames >= self.delay_frames and self.rect.bottom <= 500:
             if self.boss_pattern == BP.BEAMATTACK:
                 self._reset_beam()
-            self.delay_frames = random.randint(5, 100)
+            self.delay_frames = ri(5, 100)
             self.delayed_frames = 0
             self.switch_time = False
             self.available_patterns = self.all_patterns.copy()
-            del self.available_patterns[self.boss_pattern]
-            if self.health >= self.max_hp / 2:
-                del self.available_patterns[BP.DIAGONAL]
-            else:
-                self.available_patterns.append[BP.DIAGONAL]
-            self.boss_pattern = random.choice(list(self.available_patterns.keys()))
+            #del self.available_patterns[self.boss_pattern]
+            if self.health <= self.max_hp / 2:
+                self.boss_stage = 2
+            self.boss_pattern = random.choices(list(self.available_patterns.keys()), 
+                weights = self.stage_weights[self.boss_stage].values())[0]
             self.needed_screen_hits = self.available_patterns[self.boss_pattern]
-            self.all_patterns = {BP.SHOOTBASIC: random.randint(2, 4), BP.MACHINEGUN: random.randint(5, 10), BP.DIAGONAL: random.randint(4, 8),
-                BP.DARTTOHIT: random.randint(1, 5), BP.BEAMATTACK: random.randint(4, 6), BP.DARTWITHFASTFIRE: random.randint(1, 4)}
+            self.all_patterns = {BP.SHOOTBASIC: ri(2, 4), BP.MACHINEGUN: ri(5, 10), BP.DIAGONAL: ri(4, 8),
+                BP.DARTTOHIT: ri(1, 5), BP.BEAMATTACK: ri(4, 6), BP.DARTWITHFASTFIRE: ri(1, 4)}
             self.time_start = time.time()
         self.delayed_frames += 1
 
@@ -123,6 +131,8 @@ class Boss(Sprite):
             self._shoot_basic_movement(switch_covered=False)
         elif pattern == BP.DIAGONAL:
             self._diagonal_movement()
+        else:
+            print("something's wrong")
 
     def _shoot_basic_movement(self, switch_covered = True):
         """Basic side to side movement"""
@@ -148,7 +158,7 @@ class Boss(Sprite):
             self.rect.x = self.x
             if self._check_screen_edges() == 0:
                 self.xdirection *= -1
-                self.x += (self._amount_beyond_edge() + random.randint(5, 90)) * self.xdirection
+                self.x += (self._amount_beyond_edge() + ri(5, 90)) * self.xdirection
                 self.rect.x = self.x
         else:
             self.y += 5.5 * self.ydirection
