@@ -91,7 +91,7 @@ class Scoreboard:
         for x in range(len(self.list_of_high_scores)):
             self.high_text += f"{x + 1} : {self.list_of_high_scores[x]}  "
         print(self.high_text)
-        self.high_score_text = Text(self.ai_game, self.high_text, 60, (0, 0, 0), 200, 200, line_spacing=80)
+        self.high_score_text = Text(self.ai_game, self.high_text, 60, (0, 0, 0), 200, 200, line_spacing=80, alignment = 0)
     
     def show_high_scores(self):
         self.high_score_text.draw_text()

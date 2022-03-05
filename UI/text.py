@@ -2,7 +2,7 @@ import pygame.ftfont
 
 class Text:
 
-    def __init__(self, ai_game, text, font_size, font_color, posx, posy, line_spacing = 40):
+    def __init__(self, ai_game, text, font_size, font_color, posx, posy, line_spacing = 40, alignment = 1):
         """Initialize the text's attributes"""
         pygame.ftfont.init()
         self.screen = ai_game.screen
@@ -15,6 +15,7 @@ class Text:
         self.bg_color = self.settings.bg_color
         self.text = text
         self.line_spacing = line_spacing
+        self.alignment = alignment
 
         self._prep_text(self.text)
 
@@ -35,7 +36,12 @@ class Text:
             self.text_rect_list.append(image.get_rect())
         for rect in self.text_rect_list:
             # Move all the rects to the correct spots
-            rect.centerx = self.posx
+            if self.alignment == 1:
+                rect.centerx = self.posx
+            elif self.alignment == 0:
+                rect.left = self.posx
+            elif self.alignement == 2:
+                rect.right = self.posx
             rect.centery = self.posy + (self.line_spacing * counter)
             counter += 1
 
