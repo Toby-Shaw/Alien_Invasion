@@ -15,10 +15,11 @@ def check_main_buttons(self, mouse_pos):
         elif self.info.rect.collidepoint(mouse_pos):
         # Go to info screen
             self.stats.game_layer = GS.INFOSCREEN
-        elif self.settings_button.rect.collidepoint(mouse_pos):
+        elif self.main_settings_button.rect.collidepoint(mouse_pos):
             self.previous_layer = GS.MAINMENU
             self.stats.game_layer = GS.SETTINGS
         elif self.highscores_button.rect.collidepoint(mouse_pos):
+            self.sb.prep_high_scores()
             self.stats.game_layer = GS.HIGHSCORES
 
 def check_pause_buttons(self, mouse_pos):
@@ -26,6 +27,7 @@ def check_pause_buttons(self, mouse_pos):
     if self.stats.game_layer == GS.PAUSEMENU:
         if self.main_menu.rect.collidepoint(mouse_pos):
             # Return to the main menu if clicked
+            self.sb._update_high_scores_page()
             if self.alien_pattern == AP.BOSSROOM:
                 self.game_sounds.change_back()
             self.stats.game_layer = GS.MAINMENU
@@ -34,7 +36,7 @@ def check_pause_buttons(self, mouse_pos):
             # Return to the game if clicked
             self.stats.game_layer = GS.PLAYSCREEN
             pygame.mouse.set_visible(False)
-        elif self.settings_button.rect.collidepoint(mouse_pos):
+        elif self.pause_settings_button.rect.collidepoint(mouse_pos):
             self.previous_layer = GS.PAUSEMENU
             self.stats.game_layer = GS.SETTINGS
 
@@ -43,6 +45,8 @@ def check_over_buttons(self, mouse_pos):
     if self.stats.game_layer == GS.ENDSCREEN:
         if self.main_menu.rect.collidepoint(mouse_pos):
             self.title_switch = 0
+            self.game_sounds.change_back()
+            self.sb._update_high_scores_page()
             self.stats.game_layer = GS.MAINMENU
 
 def check_slider(self, mouse_pos, mouse_pressed, new_click):
@@ -95,12 +99,12 @@ def _check_escape_events(self):
         pygame.mouse.set_visible(True)
     elif self.stats.game_layer == GS.PAUSEMENU:
         # If on pause, go to the main menu
-        high_score = open("Games/Alien_Invasion/high_score.txt", "w")
-        high_score.write(str(self.stats.high_score))
+        self.sb._update_high_scores_page()
         self.stats.game_layer = GS.MAINMENU
         self.title_switch = 0
         if self.alien_pattern == AP.BOSSROOM:
             self.game_sounds.change_back()
+        self.updated = True
         pygame.mouse.set_visible(True)
     elif self.stats.game_layer == GS.INFOSCREEN or self.stats.game_layer == GS.ENDSCREEN or self.stats.game_layer == GS.HIGHSCORES:
         # Go back to the main menu
@@ -110,10 +114,11 @@ def _check_escape_events(self):
             self.game_sounds.change_back()
     elif self.stats.game_layer == GS.SETTINGS:
         self.stats.game_layer = self.previous_layer
-    else:
+    elif not self.updated:
         # Quit if on the main menu
-        high_score = open("Games/Alien_Invasion/high_score.txt", "w")
-        high_score.write(str(self.stats.high_score))
+        self.sb._update_high_scores_page()
+        sys.exit()
+    else:
         sys.exit()
 
 def check_keyup_events(self, event):

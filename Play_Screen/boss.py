@@ -12,8 +12,6 @@ class Boss(Sprite):
     def __init__(self, horde, health = 600, coords = (0, 0), directions = [1, 1]):
         """Initialize the Boss placement and things"""
         super().__init__()
-        # To be fixed, odd names screwed up at some point
-        self.ai_game = horde
         self.screen = horde.screen
         self.settings = horde.settings
         self.horde = horde
@@ -272,7 +270,7 @@ class Boss(Sprite):
         """Shoot an alien_bullet"""
         if self.time_since_shot > cooldown:
             self.time_since_shot = 0
-            new_bullet = AlienBullet(self.ai_game, self)
+            new_bullet = AlienBullet(self.horde, self)
             self.alien_bullets.add(new_bullet)
         self.time_since_shot += 1
 
@@ -285,7 +283,7 @@ class Boss(Sprite):
             if self.time_since_shot > spacing:
                 self.time_since_shot = 0
                 self.number_bullets += 1
-                new_bullet = AlienBullet(self.ai_game, self)
+                new_bullet = AlienBullet(self.horde, self)
                 self.alien_bullets.add(new_bullet)
             self.time_since_shot += 1
             if self.number_bullets >= groupnumber:
@@ -307,7 +305,7 @@ class Boss(Sprite):
         pygame.mixer.music.play(-1)
         self.start_time = time.time()
         self.rect.bottom = 0
-        self.rect.centerx = self.ai_game.settings.screen_width / 2
+        self.rect.centerx = self.horde.settings.screen_width / 2
         self.previous_step = 0
         self.check_cut_scene_movement()
         

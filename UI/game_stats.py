@@ -7,8 +7,15 @@ class Gamestats:
         self.reset_stats()
 
         # High score never resets.
+        self.get_high_score()
+
+    def get_high_score(self):
+        """Read the high score from the file in a correct manner"""
         f = open("Games/Alien_Invasion/high_score.txt", "r")
-        self.high_score = int(f.read())
+        high_score = str(f.read())
+        self.high_score = high_score.split()
+        for x in range(len(self.high_score)):
+            self.high_score[x] = int(self.high_score[x])
 
     def reset_stats(self):
         """Initialize stats that can change during the game."""

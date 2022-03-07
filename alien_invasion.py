@@ -58,8 +58,10 @@ class AlienInvasion:
             (self.settings.screen_width / 2), (self.settings.screen_height / 2))
         self.info = Button(self, "Information", (0, 255, 0), 
             self.settings.screen_width / 2, (self.settings.screen_height / 2 + 50))
-        self.settings_button = Button(self, "Settings", (0, 255, 0),
+        self.main_settings_button = Button(self, "Settings", (0, 255, 0),
             self.settings.screen_width / 2, (self.settings.screen_height / 2 + 150))
+        self.pause_settings_button = Button(self, "Settings", (0, 255, 0),
+            self.settings.screen_width / 2, (self.settings.screen_height / 2 + 200))
         self.highscores_button = Button(self, "Highscores", (0, 255, 0), 
             self.settings.screen_width / 2, self.settings.screen_height / 2 + 250)
 
@@ -106,6 +108,7 @@ class AlienInvasion:
         self.game_sounds = GameSounds()
         # Important for new_level final frames
         self.random_flag = 0
+        self.updated = False
 
     def run_game(self):
         """Start the main loop for the game."""
@@ -456,7 +459,7 @@ class AlienInvasion:
         self.title.draw_text()
         self.play_button.draw_button()
         self.info.draw_button()
-        self.settings_button.draw_button()
+        self.main_settings_button.draw_button()
         self.highscores_button.draw_button()
 
     def _update_screen(self):
@@ -473,7 +476,7 @@ class AlienInvasion:
             self.pause.draw_text()
             self.main_menu.draw_button()
             self.resume.draw_button()
-            self.settings_button.draw_button()
+            self.pause_settings_button.draw_button()
 
         # Draw the information screen when appropriate
         elif self.stats.game_layer == GS.INFOSCREEN:
