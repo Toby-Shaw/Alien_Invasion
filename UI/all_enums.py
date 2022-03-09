@@ -26,6 +26,7 @@ class GameStates(Enum):
     ENDSCREEN = 5
     SETTINGS = 6
     HIGHSCORES = 7
+    INPUTPAGE = 8
 
 class BossPattern(Enum):
     SHOOTBASIC = 1

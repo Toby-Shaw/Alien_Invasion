@@ -14,6 +14,9 @@ class Gamestats:
         f = open("Games/Alien_Invasion/high_score.txt", "r")
         high_score = str(f.read())
         self.high_score = high_score.split()
+        stop_index = self.high_score.index('endscore')
+        self.high_initials = self.high_score[stop_index + 1:]
+        self.high_score = self.high_score[0:stop_index]
         for x in range(len(self.high_score)):
             self.high_score[x] = int(self.high_score[x])
 

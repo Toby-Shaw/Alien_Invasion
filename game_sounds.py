@@ -3,7 +3,7 @@ from pygame.mixer import music
 
 class GameSounds:
 
-    def __init__(self):
+    def __init__(self, mute = False):
         """Initialize the music and initial volumes, play the music"""
         music.load("Games/Alien_Invasion/Music/cinematic-space-drone-10623.wav")
         music.set_volume(0.9)
@@ -21,6 +21,9 @@ class GameSounds:
         self.ship_hit = Sound("Games/Alien_Invasion/Music/ship_hit.wav")
         self.ship_hit.set_volume(0.75)
         self.sound_channel = Channel(0)
+        if mute:
+            self.sound_channel.set_volume(0)
+            music.set_volume(0)
 
     def change_back(self):
         """change back to the default music"""

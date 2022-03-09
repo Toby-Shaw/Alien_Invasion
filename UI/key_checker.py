@@ -27,10 +27,11 @@ def check_pause_buttons(self, mouse_pos):
     if self.stats.game_layer == GS.PAUSEMENU:
         if self.main_menu.rect.collidepoint(mouse_pos):
             # Return to the main menu if clicked
-            self.sb._update_high_scores_page()
+            if self.stats.score > self.stats.high_score[4]:
+                self.sb._update_high_scores_page()
+            else: self.stats.game_layer = GS.MAINMENU
             if self.alien_pattern == AP.BOSSROOM:
                 self.game_sounds.change_back()
-            self.stats.game_layer = GS.MAINMENU
             self.title_switch = 0
         elif self.resume.rect.collidepoint(mouse_pos):
             # Return to the game if clicked
@@ -46,8 +47,10 @@ def check_over_buttons(self, mouse_pos):
         if self.main_menu.rect.collidepoint(mouse_pos):
             self.title_switch = 0
             self.game_sounds.change_back()
-            self.sb._update_high_scores_page()
-            self.stats.game_layer = GS.MAINMENU
+            if self.stats.score > self.stats.high_score[4]:
+                self.sb._update_high_scores_page()
+            else: self.stats.game_layer = GS.MAINMENU
+            #self.stats.game_layer = GS.MAINMENU
 
 def check_slider(self, mouse_pos, mouse_pressed, new_click):
     """Check the settings sliders"""
@@ -99,26 +102,29 @@ def _check_escape_events(self):
         pygame.mouse.set_visible(True)
     elif self.stats.game_layer == GS.PAUSEMENU:
         # If on pause, go to the main menu
-        self.sb._update_high_scores_page()
-        self.stats.game_layer = GS.MAINMENU
+        if self.stats.score > self.stats.high_score[4]:
+            self.sb._update_high_scores_page()
+        else: self.stats.game_layer = GS.MAINMENU
         self.title_switch = 0
         if self.alien_pattern == AP.BOSSROOM:
             self.game_sounds.change_back()
-        self.updated = True
         pygame.mouse.set_visible(True)
-    elif self.stats.game_layer == GS.INFOSCREEN or self.stats.game_layer == GS.ENDSCREEN or self.stats.game_layer == GS.HIGHSCORES:
+    elif self.stats.game_layer == GS.INFOSCREEN or self.stats.game_layer == GS.HIGHSCORES:
         # Go back to the main menu
         self.stats.game_layer = GS.MAINMENU
+        self.title_switch = 0
+    elif self.stats.game_layer == GS.ENDSCREEN:
+        if self.stats.score > self.stats.high_score[4]:
+            self.sb._update_high_scores_page()
+        else: self.stats.game_layer = GS.MAINMENU
         self.title_switch = 0
         if self.alien_pattern == AP.BOSSROOM:
             self.game_sounds.change_back()
     elif self.stats.game_layer == GS.SETTINGS:
         self.stats.game_layer = self.previous_layer
-    elif not self.updated:
+    else:
         # Quit if on the main menu
         self.sb._update_high_scores_page()
-        sys.exit()
-    else:
         sys.exit()
 
 def check_keyup_events(self, event):

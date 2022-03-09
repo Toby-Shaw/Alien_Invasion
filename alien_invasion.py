@@ -85,6 +85,7 @@ class AlienInvasion:
         blocks up to two bullets  from the enemies before breaking.
         Activate it with the up key or W.""",
             40, (0, 0, 0), 550, 250)
+        self.input_text = Text(self, "Input:", 80, (0, 0, 0), 400, 300)
         self.music_text = Text(self, """Music Volume:              Sound Volume:""",
                     60, (0, 0, 0), 300, 200)
         self.music_slider = Slider(self, (150, 255, 150), 750, 200, 0)
@@ -105,10 +106,9 @@ class AlienInvasion:
         self.various_alien_bullet_groups = [self.horde.alien_bullets, self.horde.boss.alien_bullets]
         self.general_play = True
         # Music
-        self.game_sounds = GameSounds()
+        self.game_sounds = GameSounds(mute = True)
         # Important for new_level final frames
         self.random_flag = 0
-        self.updated = False
 
     def run_game(self):
         """Start the main loop for the game."""
@@ -132,6 +132,8 @@ class AlienInvasion:
                 check_slider(self, mouse_pos, mouse_pressed[0], False)
             elif self.stats.game_layer == GS.MAINMENU:
                 self._update_title()
+            elif self.stats.game_layer == GS.INPUTPAGE:
+                self.sb._update_initials()
             self._update_screen()
 
     def _start_game(self):
@@ -171,14 +173,16 @@ class AlienInvasion:
         """Respond to keypresses and mouse events."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                high_score = open("Games/Alien_Invasion/high_score.txt", "w")
-                high_score.write(str(self.stats.high_score))
+                self.sb._update_high_scores_page(quit = True)
                 sys.exit()
             elif event.type == pygame.KEYUP:
                 check_keyup_events(self, event)
             if self.general_play:
                 if event.type == pygame.KEYDOWN:
-                    check_keydown_events(self, event)
+                    if self.stats.game_layer == GS.INPUTPAGE:
+                        self.sb._check_inputs(event)
+                    else:
+                        check_keydown_events(self, event)
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
                     check_main_buttons(self, mouse_pos)
@@ -494,6 +498,11 @@ class AlienInvasion:
 
         elif self.stats.game_layer == GS.HIGHSCORES:
             self.sb.show_high_scores()
+
+        elif self.stats.game_layer == GS.INPUTPAGE:
+            self.input_text.draw_text()
+            for text in self.sb.letter_texts:
+                text.draw_text()
 
         # Draw the fps screen on every screen
         self.fps_meter.draw_text()
