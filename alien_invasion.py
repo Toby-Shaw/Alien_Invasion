@@ -23,7 +23,7 @@ from game_sounds import GameSounds
 from UI.slider import Slider
 from Play_Screen.boss import Boss
 from UI.all_enums import BossPattern as BP
-from UI.key_checker import *
+from UI.key_checker import Keychecker
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -41,6 +41,7 @@ class AlienInvasion:
         # and make a scoreboard
         self.stats = Gamestats(self)
         self.sb = Scoreboard(self)
+        self.kc = Keychecker(self)
         self.alien_pattern = AP.THREEROWS
 
         self.ship = Ship(self)
@@ -102,11 +103,11 @@ class AlienInvasion:
 
         # Start Alien Invasion in an inactive state.
         self.stats.game_layer = GS.MAINMENU
-        self.cheats = True
+        self.cheats = False
         self.various_alien_bullet_groups = [self.horde.alien_bullets, self.horde.boss.alien_bullets]
         self.general_play = True
         # Music
-        self.game_sounds = GameSounds(mute = True)
+        self.game_sounds = GameSounds(mute = False)
         # Important for new_level final frames
         self.random_flag = 0
 
@@ -129,7 +130,7 @@ class AlienInvasion:
                 # update the sliders each frame if necessary
                 mouse_pos = pygame.mouse.get_pos()
                 mouse_pressed = pygame.mouse.get_pressed()
-                check_slider(self, mouse_pos, mouse_pressed[0], False)
+                self.kc.check_slider(mouse_pos, mouse_pressed[0], False)
             elif self.stats.game_layer == GS.MAINMENU:
                 self._update_title()
             elif self.stats.game_layer == GS.INPUTPAGE:
@@ -176,19 +177,19 @@ class AlienInvasion:
                 self.sb._update_high_scores_page(quit = True)
                 sys.exit()
             elif event.type == pygame.KEYUP:
-                check_keyup_events(self, event)
+                self.kc.check_keyup_events(event)
             if self.general_play:
                 if event.type == pygame.KEYDOWN:
                     if self.stats.game_layer == GS.INPUTPAGE:
                         self.sb._check_inputs(event)
                     else:
-                        check_keydown_events(self, event)
+                        self.kc.check_keydown_events(event)
                 elif event.type == pygame.MOUSEBUTTONDOWN:
                     mouse_pos = pygame.mouse.get_pos()
-                    check_main_buttons(self, mouse_pos)
-                    check_pause_buttons(self, mouse_pos)
-                    check_over_buttons(self, mouse_pos)
-                    check_slider(self, mouse_pos, True, True)
+                    self.kc.check_main_buttons(mouse_pos)
+                    self.kc.check_pause_buttons(mouse_pos)
+                    self.kc.check_over_buttons(mouse_pos)
+                    self.kc.check_slider(mouse_pos, True, True)
                 elif event.type == pygame.MOUSEBUTTONUP:
                     self.music_slider.clicked = False
                     self.sound_slider.clicked = False

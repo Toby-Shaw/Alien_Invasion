@@ -21,13 +21,13 @@ class Scoreboard:
         #Font settings for scoring info
         self.text_color = (30, 30, 30)
         self.font = pygame.font.SysFont(None, 36)
-        self.initials_defined = False
+        #self.initials_defined = False
         self.bypass = False
         self.defined_initials = ''
         self.go_ahead = False
         self.letter_number = 0
         self.letter_texts = []
-        self.alphabet = 'abcdefghijklmnopqrstuvwxyz'
+        self.alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
         # Prep the initial score image
         self.prep_score()
@@ -117,19 +117,17 @@ class Scoreboard:
                 self.stats.high_score[self.temp_index] = self.stats.score
                 self.stats.score = 0
                 # Initials Shenanigans
-                if not self.initials_defined and quit == False:
+                if quit == False:
                     self.ai_game.stats.game_layer = GS.INPUTPAGE
                 elif quit:
                     self._move_initials()
-                    self.stats.high_initials[self.temp_index] = 'NUL'
-                elif self.initials_defined:
-                    self._move_initials()
-                    self.stats.high_initials[self.temp_index] = self.defined_initials
+                    self.stats.high_initials[self.temp_index] = '---'
                 break
             elif bypass:
                 # Should only be called if it has been run through once and got sent to the input page
                 self._move_initials()
                 self.stats.high_initials[self.temp_index] = self.defined_initials
+                self.defined_initials = ""
                 break
 
         high_score = open("Games/Alien_Invasion/high_score.txt", "w")
@@ -152,18 +150,25 @@ class Scoreboard:
     
     def _update_initials(self):
         if self.go_ahead:
-            self.initials_defined = True
+            self.go_ahead = False
             self._update_high_scores_page(bypass = True)
             self.ai_game.stats.game_layer = GS.MAINMENU
+            self.letter_texts = []
     
     def _check_inputs(self, event):
-        if event.__dict__['unicode'] in self.alphabet:
+        if event.__dict__['unicode'] in self.alphabet and event.__dict__['unicode'] and len(self.defined_initials) < 3:
             self.defined_initials += event.__dict__['unicode']
             self.letter_texts.append(Text(self.ai_game, self.defined_initials[self.letter_number], 
-                80, (0, 0, 0), 400 + self.letter_number * 35, 450))
+                80, (0, 0, 0), 400, 450))
+            if self.letter_number > 0:
+                self.letter_texts[self.letter_number].text_rect_list[0].x = (
+                    self.letter_texts[self.letter_number - 1].text_rect_list[0].right + 10)
             self.letter_number += 1
-            if len(self.defined_initials) >= 3:
-                self.letter_number = 0
-                self.go_ahead = True
-        else:
-            print("invalid character")
+        elif event.key == pygame.K_BACKSPACE and self.letter_number > 0:
+            self.letter_number -= 1
+            self.letter_texts.pop(-1)
+            self.defined_initials = self.defined_initials[:-1]
+        elif event.__dict__['key'] == 13 and len(self.defined_initials) >= 3:
+            # This works for the enter key
+            self.letter_number = 0
+            self.go_ahead = True

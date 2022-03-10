@@ -1,1 +1,1 @@
-173692 17130 300 250 200 endscore TOB ETH yah yah yah 
+173692 17130 250 150 100 endscore TOB ETH --- HUF NUL 
