@@ -86,7 +86,8 @@ class AlienInvasion:
         blocks up to two bullets  from the enemies before breaking.
         Activate it with the up key or W.""",
             40, (0, 0, 0), 550, 250)
-        self.input_text = Text(self, "Input:", 80, (0, 0, 0), 400, 300)
+        self.input_text = Text(self, "Congrats! Your score is one of the top five!  Your Name:",
+            70, (0, 0, 0), self.settings.screen_width / 2, 200, line_spacing = 100)
         self.music_text = Text(self, """Music Volume:              Sound Volume:""",
                     60, (0, 0, 0), 300, 200)
         self.music_slider = Slider(self, (150, 255, 150), 750, 200, 0)
@@ -103,11 +104,11 @@ class AlienInvasion:
 
         # Start Alien Invasion in an inactive state.
         self.stats.game_layer = GS.MAINMENU
-        self.cheats = False
+        self.cheats = True
         self.various_alien_bullet_groups = [self.horde.alien_bullets, self.horde.boss.alien_bullets]
         self.general_play = True
         # Music
-        self.game_sounds = GameSounds(mute = False)
+        self.game_sounds = GameSounds(mute = True)
         # Important for new_level final frames
         self.random_flag = 0
 
@@ -174,7 +175,7 @@ class AlienInvasion:
         """Respond to keypresses and mouse events."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.sb._update_high_scores_page(quit = True)
+                self.sb._update_high_scores_page(quit = True, midgone = (self.stats.game_layer == GS.INPUTPAGE))
                 sys.exit()
             elif event.type == pygame.KEYUP:
                 self.kc.check_keyup_events(event)
@@ -261,12 +262,14 @@ class AlienInvasion:
             self.collisions = pygame.sprite.spritecollide(self.horde.boss, self.bullets, True)
             if self.collisions:
                 if not self.settings.normal_bullet:
-                    if self.horde.boss.health >= 15: self.horde.boss.health -= 15
-                    elif self.horde.boss.health < 15: self.horde.boss.health = 0
+                    damage = int(30 / self.horde.boss.diff)
+                    if self.horde.boss.health >= damage: self.horde.boss.health -= damage
+                    elif self.horde.boss.health < damage: self.horde.boss.health = 0
                     self.horde.boss.healthbar._update_health()
                 else:
-                    if self.horde.boss.health >= 7: self.horde.boss.health -= 7 
-                    elif self.horde.boss.health < 7: self.horde.boss.health = 0
+                    damage = int(14 / self.horde.boss.diff)
+                    if self.horde.boss.health >= damage: self.horde.boss.health -= damage
+                    elif self.horde.boss.health < damage: self.horde.boss.health = 0
                     self.horde.boss.healthbar._update_health()
         for collision in self.collision_shell:
             for aliens in collision.values():
@@ -329,7 +332,7 @@ class AlienInvasion:
         if self.stats.level % 5 == 0:
             self.warp_square = AbilityButton(self, "S", 50)
             self.strong_bullet_square = AbilityButton(self, "B", -50)
-            self.horde.boss = Boss(self.horde)
+            self.horde.boss = Boss(self.horde, self.stats.level / 5)
             self.horde.boss_shell.add(self.horde.boss)
             self.various_alien_bullet_groups = [self.horde.alien_bullets, 
                             self.horde.boss.alien_bullets]
@@ -399,7 +402,9 @@ class AlienInvasion:
                 temp_coords = self.horde.boss.rect.center
                 temp_pattern = self.horde.boss.boss_pattern
                 temp_directions = [self.horde.boss.xdirection, self.horde.boss.ydirection]
-                self.horde.boss = Boss(self.horde, health=temp_health, coords=temp_coords, directions=temp_directions)
+                temp_diff = self.horde.boss.diff
+                self.horde.boss = Boss(self.horde, temp_diff, 
+                        health=temp_health, coords=temp_coords, directions=temp_directions)
                 self.horde.boss_shell.add(self.horde.boss)
                 self.various_alien_bullet_groups = [self.horde.alien_bullets, 
                             self.horde.boss.alien_bullets]

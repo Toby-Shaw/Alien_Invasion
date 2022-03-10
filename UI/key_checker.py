@@ -84,12 +84,14 @@ class Keychecker:
                 self.ai.warp_square.covering = True
         elif event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
             self._check_escape_events()
-        elif event.key == pygame.K_b and self.ai.cheats == True:
+        elif event.key == pygame.K_b and self.ai.cheats:
             for group in self.ai.horde.three_columns_group:
                 group.empty()
-        elif event.key == pygame.K_n and self.ai.cheats == True:
+        elif event.key == pygame.K_n and self.ai.cheats:
             self.ai.horde.boss.health -= 100
             self.ai.horde.boss.healthbar._update_health()
+        elif event.key == pygame.K_m and self.ai.cheats:
+            sys.exit()
 
     def _check_escape_events(self):
         """Change screens when q is pressed"""

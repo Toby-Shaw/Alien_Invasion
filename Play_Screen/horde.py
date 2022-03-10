@@ -16,7 +16,7 @@ class Horde:
         self.alien_pattern = ai_game.alien_pattern
         self.ship = ai_game.ship
         self.ai_game = ai_game
-        self.boss = Boss(self)
+        self.boss = Boss(self, 1)
         self.boss_shell = pygame.sprite.GroupSingle()
         self.boss_shell.add(self.boss)
 

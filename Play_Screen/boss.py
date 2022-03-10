@@ -9,7 +9,7 @@ from pygame.sprite import Sprite
 from Play_Screen.healthbar import HealthBar
 
 class Boss(Sprite):
-    def __init__(self, horde, health = 600, coords = (0, 0), directions = [1, 1]):
+    def __init__(self, horde, difficulty, health = 600, coords = (0, 0), directions = [1, 1]):
         """Initialize the Boss placement and things"""
         super().__init__()
         self.screen = horde.screen
@@ -24,6 +24,7 @@ class Boss(Sprite):
         self.rect.center = coords
         self.x = self.rect.x
         self.y = self.rect.y
+        self.diff = difficulty
         # Health things
         self.max_hp = 600
         self.health = health
@@ -42,9 +43,9 @@ class Boss(Sprite):
             # 1 = right/down, left = -1/up
         self.xdirection = directions[0]
         self.ydirection = directions[1]
-        self.all_patterns = {BP.SHOOTBASIC: ri(2, 4), BP.MACHINEGUN: ri(6, 10),
-                BP.DIAGONAL: ri(4, 8), BP.DARTTOHIT: ri(1, 5), 
-                BP.BEAMATTACK: ri(4, 7), BP.DARTWITHFASTFIRE: ri(1, 4)}
+        self.all_patterns = {BP.SHOOTBASIC: ri(2, 4), BP.MACHINEGUN: ri((5 + self.diff), 9 + self.diff),
+                BP.DIAGONAL: ri(2 + self.diff, 5 + self.diff), BP.DARTTOHIT: ri(1, 5), 
+                BP.BEAMATTACK: ri(4, 7), BP.DARTWITHFASTFIRE: ri(0 + self.diff, 3 + self.diff)}
         self.shooter_patterns = (BP.SHOOTBASIC, BP.DARTTOHIT, BP.DIAGONAL)
         self.gunner_patterns = (BP.MACHINEGUN, BP.DARTWITHFASTFIRE)
         # Switching pattern things
@@ -64,10 +65,10 @@ class Boss(Sprite):
         # Start pattern and time
         self.time_start = time.time()
         self.boss_stage = 1
-        self.stage_one_weights = {BP.SHOOTBASIC : 20, BP.MACHINEGUN: 20, BP.DIAGONAL: 0, 
-                BP.DARTTOHIT: 30, BP.BEAMATTACK: 10, BP.DARTWITHFASTFIRE: 20}
-        self.stage_two_weights = {BP.SHOOTBASIC : 10, BP.MACHINEGUN: 15, BP.DIAGONAL: 30, 
-                BP.DARTTOHIT: 20, BP.BEAMATTACK: 10, BP.DARTWITHFASTFIRE: 15}
+        self.stage_one_weights = {BP.SHOOTBASIC : 30 - self.diff * 5, BP.MACHINEGUN: 15 + self.diff * 5, BP.DIAGONAL: 0, 
+                BP.DARTTOHIT: 30, BP.BEAMATTACK: 10 + self.diff * 5, BP.DARTWITHFASTFIRE: 15 + self.diff * 5}
+        self.stage_two_weights = {BP.SHOOTBASIC : 10, BP.MACHINEGUN: 10 + self.diff * 5, BP.DIAGONAL: 10 + self.diff * 10, 
+                BP.DARTTOHIT: 15 + self.diff * 5, BP.BEAMATTACK: 10, BP.DARTWITHFASTFIRE: 10 + self.diff * 5}
         self.stage_weights = (0, self.stage_one_weights, self.stage_two_weights)
         #print(self.all_patterns.keys())
         self.boss_pattern = random.choices(list(self.all_patterns.keys()), 
@@ -112,8 +113,9 @@ class Boss(Sprite):
             self.boss_pattern = random.choices(list(self.available_patterns.keys()), 
                 weights = self.stage_weights[self.boss_stage].values())[0]
             self.needed_screen_hits = self.available_patterns[self.boss_pattern]
-            self.all_patterns = {BP.SHOOTBASIC: ri(2, 4), BP.MACHINEGUN: ri(5, 10), BP.DIAGONAL: ri(4, 8),
-                BP.DARTTOHIT: ri(1, 5), BP.BEAMATTACK: ri(4, 6), BP.DARTWITHFASTFIRE: ri(1, 4)}
+            self.all_patterns = {BP.SHOOTBASIC: ri(2, 4), BP.MACHINEGUN: ri((5 + self.diff), 9 + self.diff),
+                BP.DIAGONAL: ri(2 + self.diff, 5 + self.diff), BP.DARTTOHIT: ri(1, 5), 
+                BP.BEAMATTACK: ri(4, 7), BP.DARTWITHFASTFIRE: ri(0 + self.diff, 3 + self.diff)}
             self.time_start = time.time()
         self.delayed_frames += 1
 

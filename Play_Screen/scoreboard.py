@@ -1,6 +1,5 @@
 import pygame.font
 import pygame
-from time import sleep
 from pygame.sprite import Group
 from Play_Screen.ship import Ship
 from UI.text import Text
@@ -107,7 +106,7 @@ class Scoreboard:
         self.high_score_title_text = Text(self.ai_game, "Highscores: ", 120, (0, 0, 0), 
                     500, 150)
 
-    def _update_high_scores_page(self, quit = False, bypass = False):
+    def _update_high_scores_page(self, quit = False, bypass = False, midgone = False):
         """Open the high score file and add the new high scores"""
         for x in self.stats.high_score:
             if self.stats.score > x:
@@ -116,6 +115,7 @@ class Scoreboard:
                     self.stats.high_score[y + 1] = self.stats.high_score[y]
                 self.stats.high_score[self.temp_index] = self.stats.score
                 self.stats.score = 0
+                self.ai_game.input_text._prep_text(f"Congrats! Your score is #{self.temp_index + 1}  Your Name:")
                 # Initials Shenanigans
                 if quit == False:
                     self.ai_game.stats.game_layer = GS.INPUTPAGE
@@ -129,6 +129,9 @@ class Scoreboard:
                 self.stats.high_initials[self.temp_index] = self.defined_initials
                 self.defined_initials = ""
                 break
+            elif midgone:
+                self._move_initials()
+                self.stats.high_initials[self.temp_index] = '---'
 
         high_score = open("Games/Alien_Invasion/high_score.txt", "w")
         write_out = ""
@@ -140,6 +143,7 @@ class Scoreboard:
         high_score.write(write_out)
 
     def _move_initials(self):
+        """Move all later initial forward to match their scores"""
         for y in range(len(self.stats.high_score) - 2, self.temp_index - 1, -1):
             self.stats.high_initials[y + 1] = self.stats.high_initials[y]
 
@@ -149,6 +153,7 @@ class Scoreboard:
         self.high_score_text.draw_text()
     
     def _update_initials(self):
+        """To be called every frame on INPUTPAGE, finishes input things"""
         if self.go_ahead:
             self.go_ahead = False
             self._update_high_scores_page(bypass = True)
@@ -156,19 +161,20 @@ class Scoreboard:
             self.letter_texts = []
     
     def _check_inputs(self, event):
-        if event.__dict__['unicode'] in self.alphabet and event.__dict__['unicode'] and len(self.defined_initials) < 3:
+        """Based on the inputs, draw and add the letters"""
+        if event.__dict__['unicode'] in self.alphabet and event.__dict__['unicode'] and len(self.defined_initials) < 10:
             self.defined_initials += event.__dict__['unicode']
             self.letter_texts.append(Text(self.ai_game, self.defined_initials[self.letter_number], 
                 80, (0, 0, 0), 400, 450))
             if self.letter_number > 0:
                 self.letter_texts[self.letter_number].text_rect_list[0].x = (
-                    self.letter_texts[self.letter_number - 1].text_rect_list[0].right + 10)
+                    self.letter_texts[self.letter_number - 1].text_rect_list[0].right + 5)
             self.letter_number += 1
         elif event.key == pygame.K_BACKSPACE and self.letter_number > 0:
             self.letter_number -= 1
             self.letter_texts.pop(-1)
             self.defined_initials = self.defined_initials[:-1]
-        elif event.__dict__['key'] == 13 and len(self.defined_initials) >= 3:
+        elif event.__dict__['key'] == 13 and len(self.defined_initials) >= 2:
             # This works for the enter key
             self.letter_number = 0
             self.go_ahead = True
