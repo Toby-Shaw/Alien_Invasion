@@ -27,6 +27,8 @@ class Scoreboard:
         self.letter_number = 0
         self.letter_texts = []
         self.alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+        self.displayed_high_score = self.stats.high_score[0]
+        self.edited = False
 
         # Prep the initial score image
         self.prep_score()
@@ -37,8 +39,8 @@ class Scoreboard:
 
     def prep_score(self):
         """Turn the score into an image"""
-        rounded_score = round(self.stats.score, -1)
-        score_str = ("Score: " + "{:,}".format(rounded_score))
+        self.stats.score = round(self.stats.score, -1)
+        score_str = ("Score: " + "{:,}".format(self.stats.score))
         self.score_image = self.font.render(score_str, True, 
             self.text_color, self.settings.bg_color)
     
@@ -49,7 +51,7 @@ class Scoreboard:
 
     def prep_high_score(self):
         """Turn the high score into an image."""
-        high_score = round(self.stats.high_score[0], -1)
+        high_score = round(self.displayed_high_score, -1)
         high_score_str = ("Highscore: " + "{:,}".format(high_score))
         self.high_score_image = self.font.render(high_score_str, True, 
                 self.text_color, self.settings.bg_color)
@@ -61,8 +63,8 @@ class Scoreboard:
 
     def check_high_score(self):
         """Check for a new high score"""
-        if self.stats.score > self.stats.high_score[0]:
-            self.stats.high_score[0] = self.stats.score
+        if self.stats.score > self.displayed_high_score:
+            self.displayed_high_score = self.stats.score
             self.prep_high_score()
 
     def prep_level(self):
@@ -97,42 +99,24 @@ class Scoreboard:
         self.ships.draw(self.screen)
 
     def prep_high_scores(self):
-        """Render the highscores"""
+        """Render the highscores on the HIGHSCORES page, in descending order"""
         self.high_text = ""
         for x in range(len(self.stats.high_score)):
             self.high_text += f"{x + 1} : {self.stats.high_initials[x]} - {self.stats.high_score[x]}  "
         self.high_score_text = Text(self.ai_game, self.high_text, 60, (0, 0, 0), 
                     400, 275, line_spacing=80, alignment = 0)
         self.high_score_title_text = Text(self.ai_game, "Highscores: ", 120, (0, 0, 0), 
-                    500, 150)
+                    600, 150)
 
-    def _update_high_scores_page(self, quit = False, bypass = False, midgone = False):
-        """Open the high score file and add the new high scores"""
-        for x in self.stats.high_score:
-            if self.stats.score > x:
-                self.temp_index = self.stats.high_score.index(x)
-                for y in range(len(self.stats.high_score) - 2, self.stats.high_score.index(x) - 1, -1):
-                    self.stats.high_score[y + 1] = self.stats.high_score[y]
-                self.stats.high_score[self.temp_index] = self.stats.score
-                self.stats.score = 0
-                self.ai_game.input_text._prep_text(f"Congrats! Your score is #{self.temp_index + 1}  Your Name:")
-                # Initials Shenanigans
-                if quit == False:
-                    self.ai_game.stats.game_layer = GS.INPUTPAGE
-                elif quit:
-                    self._move_initials()
-                    self.stats.high_initials[self.temp_index] = '---'
-                break
-            elif bypass:
-                # Should only be called if it has been run through once and got sent to the input page
-                self._move_initials()
-                self.stats.high_initials[self.temp_index] = self.defined_initials
-                self.defined_initials = ""
-                break
-            elif midgone:
-                self._move_initials()
-                self.stats.high_initials[self.temp_index] = '---'
+    def _go_to_input(self, beat_high_score):
+        """Moves to INPUT page and saves the index of the beaten score, then gets the title"""
+        #print('moving to input page since a score was beaten')
+        self.ai_game.stats.game_layer = GS.INPUTPAGE
+        self.temp_index = self.stats.high_score.index(beat_high_score)
+        self.ai_game.input_text._prep_text(f"Congrats! Your score is #{self.temp_index + 1}  Your Name:")
 
+    def _write_high_score(self):
+        """Convert the high score list back into file format, to be saved between games"""
         high_score = open("Games/Alien_Invasion/high_score.txt", "w")
         write_out = ""
         for x in range(len(self.stats.high_score)):
@@ -142,21 +126,35 @@ class Scoreboard:
             write_out += self.stats.high_initials[x] + ' '
         high_score.write(write_out)
 
-    def _move_initials(self):
+    def _move_initials_and_scores(self):
         """Move all later initial forward to match their scores"""
-        for y in range(len(self.stats.high_score) - 2, self.temp_index - 1, -1):
-            self.stats.high_initials[y + 1] = self.stats.high_initials[y]
+        #print(self.stats.high_score)
+        if self.temp_index != 4 and self.temp_index != 0:
+            self.stats.high_score = (self.stats.high_score[:self.temp_index] + 
+                [self.stats.score] + self.stats.high_score[self.temp_index:-1])
+            self.stats.high_initials = (self.stats.high_initials[:self.temp_index] + 
+                [self.defined_initials] + self.stats.high_initials[self.temp_index:-1])
+        elif self.temp_index == 4:
+            self.stats.high_score[4] = self.stats.score
+            self.stats.high_initials[4] = self.defined_initials
+        elif self.temp_index == 0:
+            self.stats.high_score = [self.stats.score] + self.stats.high_score[:-1]
+            self.stats.high_initials = [self.defined_initials] + self.stats.high_initials[:-1]
+        self.edited = True
+        #print(self.stats.high_score)
+        self.defined_initials = ""
 
     def show_high_scores(self):
         """Draw the highscore things on the page"""
         self.high_score_title_text.draw_text()
         self.high_score_text.draw_text()
     
-    def _update_initials(self):
+    def finish_updating_high_scores(self):
         """To be called every frame on INPUTPAGE, finishes input things"""
         if self.go_ahead:
             self.go_ahead = False
-            self._update_high_scores_page(bypass = True)
+            self._move_initials_and_scores()
+            self._write_high_score()
             self.ai_game.stats.game_layer = GS.MAINMENU
             self.letter_texts = []
     

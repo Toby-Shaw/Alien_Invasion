@@ -17,6 +17,8 @@ class Gamestats:
         stop_index = self.high_score.index('endscore')
         self.high_initials = self.high_score[stop_index + 1:]
         self.high_score = self.high_score[0:stop_index]
+        #print(self.high_score)
+        #print(self.high_initials)
         for x in range(len(self.high_score)):
             self.high_score[x] = int(self.high_score[x])
 

@@ -108,7 +108,7 @@ class AlienInvasion:
         self.various_alien_bullet_groups = [self.horde.alien_bullets, self.horde.boss.alien_bullets]
         self.general_play = True
         # Music
-        self.game_sounds = GameSounds(mute = True)
+        self.game_sounds = GameSounds(mute = False)
         # Important for new_level final frames
         self.random_flag = 0
 
@@ -135,7 +135,7 @@ class AlienInvasion:
             elif self.stats.game_layer == GS.MAINMENU:
                 self._update_title()
             elif self.stats.game_layer == GS.INPUTPAGE:
-                self.sb._update_initials()
+                self.sb.finish_updating_high_scores()
             self._update_screen()
 
     def _start_game(self):
@@ -149,6 +149,7 @@ class AlienInvasion:
         self.sb.prep_score()
         self.sb.prep_level()
         self.sb.prep_ships()
+        self.sb.edited = False
         self.game_sounds.sound_channel.play(self.game_sounds.start_sound)
         self.alien_pattern = AP.THREEROWS
 
@@ -175,7 +176,16 @@ class AlienInvasion:
         """Respond to keypresses and mouse events."""
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                self.sb._update_high_scores_page(quit = True, midgone = (self.stats.game_layer == GS.INPUTPAGE))
+                # First check if the score qualified to edit the high score page
+                # If it does, initials are left blank and the score is placed correctly
+                if self.stats.score > self.stats.high_score[4] and not self.sb.edited:
+                    for x in self.stats.high_score:
+                        if self.stats.score > x:  
+                            self.sb.defined_initials = '---'
+                            self.sb.go_ahead = True
+                            self.sb.temp_index = self.stats.high_score.index(x)
+                            self.sb.finish_updating_high_scores()
+                            break
                 sys.exit()
             elif event.type == pygame.KEYUP:
                 self.kc.check_keyup_events(event)

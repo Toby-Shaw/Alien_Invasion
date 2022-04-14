@@ -119,7 +119,7 @@ class Keychecker:
             self.ai.stats.game_layer = self.previous_layer
         else:
             # Quit if on the main menu
-            self.ai.sb._update_high_scores_page()
+            #self.ai.sb._update_high_scores_page()
             sys.exit()
 
     def check_keyup_events(self, event):
@@ -130,6 +130,13 @@ class Keychecker:
             self.ai.ship.moving_left = False
 
     def _check_high_score_before_main(self):
+        """Check the score to see if the high scores page needs to be edited or not"""
+        #print("checking high score")
         if self.ai.stats.score > self.ai.stats.high_score[4]:
-            self.ai.sb._update_high_scores_page()
+            for y in self.ai.stats.high_score:
+                #print(y)
+                if self.ai.stats.score > y:
+                    #print(y)
+                    self.ai.sb._go_to_input(y)
+                    break
         else: self.ai.stats.game_layer = GS.MAINMENU
