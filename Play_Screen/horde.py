@@ -176,6 +176,7 @@ class Horde:
         # 1 in 3 aliens are a shooter alien
         if random.randint(1, 3) == 3:
             self.shooter_alien_addresses.append(alien_number + row_number * 9)
+            alien.image = pygame.image.load("Games/Alien_Invasion/Images/alien_red.bmp")
         if self.alien_pattern == AP.BASIC:
             self.aliens.add(alien)
         elif self.alien_pattern == AP.THREEROWS:
