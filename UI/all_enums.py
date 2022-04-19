@@ -15,6 +15,7 @@ class CollisionsStates(Enum):
 
 class AlienPattern(Enum):
     BASIC = 0
+    TWOROWS = 3
     THREEROWS = 1
     BOSSROOM = 2
 

@@ -27,6 +27,7 @@ class Horde:
         self.column2_aliens = pygame.sprite.Group()
         self.column3_aliens = pygame.sprite.Group()
         self.three_columns_group = [self.column1_aliens, self.column2_aliens, self.column3_aliens]
+        self.two_columns_group = self.three_columns_group[:-1]
         self.single_column_states_left = [CS.FIRSTCOLUMNLEFT, 
                                         CS.SECONDCOLUMNLEFT, CS.THIRDCOLUMNLEFT]
         self.single_column_states_right = [CS.FIRSTCOLUMNRIGHT, 
@@ -51,7 +52,7 @@ class Horde:
 
     def _check_bullet_collisions(self):
         """Check the alien projectile collisions with the ship (and shield with beam)"""
-        if self.alien_pattern == AP.THREEROWS or self.alien_pattern == AP.BASIC:
+        if self.alien_pattern in [AP.THREEROWS, AP.BASIC, AP.TWOROWS]:
             if pygame.sprite.spritecollide(self.ship, self.alien_bullets, True):
                 self.ai_game._ship_hit()
         elif self.alien_pattern == AP.BOSSROOM:
@@ -81,6 +82,11 @@ class Horde:
                 group.update()
                 if pygame.sprite.spritecollideany(self.ship, group):
                     self.ai_game._ship_hit()
+        elif self.alien_pattern == AP.TWOROWS:
+            for group in self.two_columns_group:
+                group.update()
+                if pygame.sprite.spritecollideany(self.ship, group):
+                    self.ai_game._ship_hit()
         elif self.alien_pattern == AP.BOSSROOM:
             self.boss.update()
             if pygame.sprite.spritecollide(self.ship, self.boss_shell, False):
@@ -91,6 +97,10 @@ class Horde:
     def _fire_shooter_aliens(self):
         """Have one alien shoot at any one time, earlier list address favored"""
         # Runs through every shooter alien address
+        if self.alien_pattern == AP.THREEROWS:
+            column_group = self.three_columns_group
+        elif self.alien_pattern == AP.TWOROWS:
+            column_group = self.two_columns_group
         if self.alien_pattern == AP.BASIC:
             for x in self.shooter_alien_addresses:
                 # Checks number of bullets, that there is no one in front,
@@ -105,7 +115,7 @@ class Horde:
             # If using rows instead of columns, this will not work
             if (len(self.alien_bullets) <= self.settings.alien_bullets_allowed):
                 for address in self.shooter_alien_addresses:
-                    for group in self.three_columns_group:
+                    for group in column_group:
                         if (self._check_in_front(address, group) and 
                         self.alien_start_list[address] in group) and self.time_since_shot >= 50:
                             self.time_since_shot = 0

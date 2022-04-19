@@ -263,6 +263,11 @@ class AlienInvasion:
             self.collisions = pygame.sprite.groupcollide(
             self.bullets, self.horde.aliens, self.settings.normal_bullet, True)
             self.collision_shell.append(self.collisions)
+        elif self.alien_pattern == AP.TWOROWS:
+            for index in range(len(self.horde.two_columns_group)):
+                self.collisions = pygame.sprite.groupcollide(self.bullets, self.horde.two_columns_group[index], 
+                        self.settings.normal_bullet, True)
+                self.collision_shell.append(self.collisions)
         elif self.alien_pattern == AP.THREEROWS:
             for index in range(len(self.horde.three_columns_group)):
                 self.collisions = pygame.sprite.groupcollide(
@@ -290,27 +295,31 @@ class AlienInvasion:
         # occur after the final alien has been deleted,
         # for aesthetic purposes
         if self.alien_pattern == AP.BASIC:
-            if self.random_flag == 1:
-                self.random_flag = 0
-                self._new_level()
             if not self.horde.aliens:
-                self.random_flag = 1
+                self._delay_frame_new_level()
         elif self.alien_pattern == AP.THREEROWS:
             # if any exist, don't do anything, otherwise new level
-            if self.horde.column3_aliens or self.horde.column2_aliens or self.horde.column1_aliens:
-                pass
-            elif self.random_flag == 1:
-                self._new_level()
-                self.random_flag = 0
-            elif self.random_flag == 0:
-                self.random_flag = 1
+            if not self.horde.column3_aliens and not self.horde.column2_aliens and not self.horde.column1_aliens:
+                self._delay_frame_new_level()
+        elif self.alien_pattern == AP.TWOROWS:
+            if not self.horde.column1_aliens and not self.horde.column2_aliens:
+                self._delay_frame_new_level()
+            
         elif self.alien_pattern == AP.BOSSROOM:
             if self.horde.boss.health == 0:
                 self.alien_pattern = AP.THREEROWS
                 self.stats.score += 100000
                 self.sb.prep_score()
                 self.sb.check_high_score()
-            
+
+    def _delay_frame_new_level(self):
+        """Odd technique to delay a frame so all aliens show as destroyed during the pause"""
+        if self.random_flag == 1:
+            self._new_level()
+            self.random_flag = 0
+        elif self.random_flag == 0:
+            self.random_flag = 1
+
     def _check_alien_bullet_shield_collisions(self):
         """Respond to shield-shooter alien collisions."""
         # Finagled a way to get all groups to work regardless of pattern
@@ -353,7 +362,7 @@ class AlienInvasion:
             self.warp_square = AbilityButton(self, "S", 170)
             self.strong_bullet_square = AbilityButton(self, "B", 70)
             self.game_sounds.change_back()
-        if self.alien_pattern == AP.THREEROWS or self.alien_pattern == AP.BASIC:
+        if self.alien_pattern in [AP.THREEROWS, AP.BASIC, AP.TWOROWS]:
             self.horde._create_fleet()
             self.settings.increase_speed()
             # Reset speeds sometimes
@@ -403,7 +412,7 @@ class AlienInvasion:
             self.settings.bullet_speed *= 0.95
 
             # Create a new fleet and center the ship.
-            if self.alien_pattern == AP.BASIC or self.alien_pattern == AP.THREEROWS:
+            if self.alien_pattern in [AP.THREEROWS, AP.BASIC, AP.TWOROWS]:
                 self.horde._create_fleet()
                 self.ship.center_ship()
                 sleep(1)
@@ -423,7 +432,6 @@ class AlienInvasion:
                 sleep(1) 
         else:
             self.stats.game_layer = GS.ENDSCREEN
-            self.alien_pattern = AP.THREEROWS
             pygame.mouse.set_visible(True)
 
     def _update_play_screen(self):
@@ -438,6 +446,9 @@ class AlienInvasion:
         if self.alien_pattern == AP.BASIC:
             self.horde.aliens.draw(self.screen)
         elif self.alien_pattern == AP.THREEROWS:
+            for group in self.horde.three_columns_group:
+                group.draw(self.screen)
+        elif self.alien_pattern == AP.TWOROWS:
             for group in self.horde.three_columns_group:
                 group.draw(self.screen)
         elif self.alien_pattern == AP.BOSSROOM:
