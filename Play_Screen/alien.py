@@ -2,11 +2,12 @@ import pygame
 from pygame.sprite import Sprite
 from UI.all_enums import AlienPattern as AP
 from UI.all_enums import CollisionsStates as CS
+from UI.all_enums import AlienColors as AC
 
 class Alien(Sprite):
     """A class to represent a single alien in the fleet"""
 
-    def __init__(self, ai_game):
+    def __init__(self, ai_game, color = AC.GREEN):
         """Initialize the alien and set its starting position"""
         super().__init__()
         self.screen = ai_game.screen
@@ -15,7 +16,10 @@ class Alien(Sprite):
         self.ai_game = ai_game
 
         # Load the alien image and set its rect attribute
-        self.image = pygame.image.load("Games/Alien_Invasion/Images/alien.bmp")
+        if color == AC.GREEN:
+            self.image = pygame.image.load("Games/Alien_Invasion/Images/alien.bmp")
+        elif color == AC.RED:
+            self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_red.bmp")
         self.rect = self.image.get_rect()
 
         # Start each new alien near the top left of the screen
@@ -73,4 +77,10 @@ class Alien(Sprite):
                 elif self.rect.left <= 0:
                     return CS.THIRDCOLUMNLEFT
 
+    def change_color(self, new_color):
+        """Change the alien color and retain previous attributes"""
+        if new_color == AC.RED:
+            self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_red.bmp")
+        elif new_color == AC.GREEN:
+            self.image = pygame.image.load("Games/Alien_Invasion/Images/alien.bmp")
                     

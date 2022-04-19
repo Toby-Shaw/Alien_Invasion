@@ -121,14 +121,13 @@ class Scoreboard:
         write_out = ""
         for x in range(len(self.stats.high_score)):
             write_out += (str(self.stats.high_score[x]) + ' ')
-        write_out += 'endscore '
+        write_out += '/ '
         for x in range(len(self.stats.high_initials)):
             write_out += self.stats.high_initials[x] + ' '
         high_score.write(write_out)
 
     def _move_initials_and_scores(self):
         """Move all later initial forward to match their scores"""
-        #print(self.stats.high_score)
         if self.temp_index != 4 and self.temp_index != 0:
             self.stats.high_score = (self.stats.high_score[:self.temp_index] + 
                 [self.stats.score] + self.stats.high_score[self.temp_index:-1])
@@ -141,7 +140,6 @@ class Scoreboard:
             self.stats.high_score = [self.stats.score] + self.stats.high_score[:-1]
             self.stats.high_initials = [self.defined_initials] + self.stats.high_initials[:-1]
         self.edited = True
-        #print(self.stats.high_score)
         self.defined_initials = ""
 
     def show_high_scores(self):

@@ -31,7 +31,7 @@ class Settings:
         self.allowed_hits = 2
 
         # Shooter alien stuff
-        self.alien_bullet_color = (0, 255, 0)
+        self.alien_bullet_color = (255, 0, 0)
         self.alien_bullet_width = 6
         self.alien_bullet_height = 15
         self.alien_bullet_speed = 4.0 * self.initial_modifier

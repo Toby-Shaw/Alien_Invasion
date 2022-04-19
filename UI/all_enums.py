@@ -35,3 +35,7 @@ class BossPattern(Enum):
     MACHINEGUN = 5
     DARTWITHFASTFIRE = 10
     DIAGONAL = 6
+
+class AlienColors(Enum):
+    GREEN = 1
+    RED = 2

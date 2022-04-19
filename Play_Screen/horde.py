@@ -6,6 +6,7 @@ from UI.all_enums import AlienPattern as AP
 from UI.all_enums import CollisionsStates as CS
 from Play_Screen.boss import Boss
 from UI.all_enums import BossPattern as BP
+from UI.all_enums import AlienColors as AC
 
 class Horde:
     """A class to handle all alien methods and things"""
@@ -144,6 +145,7 @@ class Horde:
         # Make an alien and find the number of aliens in a row
         # Spacing between each alien is equal to one alien width
         alien = Alien(self)
+        self.shooters_made = 0
         alien_width, alien_height = alien.rect.size
         available_space_x = self.settings.screen_width - (2 * alien_width)
         self.number_aliens_x = available_space_x // (2 * alien_width)
@@ -174,9 +176,10 @@ class Horde:
         alien.rect.x = alien.x
         alien.rect.y = alien_height + 2 * alien.rect.height * row_number
         # 1 in 3 aliens are a shooter alien
-        if random.randint(1, 3) == 3:
+        if random.randint(1, 36) <= (self.ai_game.stats.level * 2) and self.shooters_made <= (self.ai_game.stats.level + 2):
+            alien.change_color(AC.RED)
+            self.shooters_made += 1
             self.shooter_alien_addresses.append(alien_number + row_number * 9)
-            alien.image = pygame.image.load("Games/Alien_Invasion/Images/alien_red.bmp")
         if self.alien_pattern == AP.BASIC:
             self.aliens.add(alien)
         elif self.alien_pattern == AP.THREEROWS:
