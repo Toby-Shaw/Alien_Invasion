@@ -28,14 +28,12 @@ class Horde:
         self.column3_aliens = pygame.sprite.Group()
         self.column4_aliens = pygame.sprite.Group()
         self.four_columns_group = [self.column1_aliens, self.column2_aliens, self.column3_aliens, self.column4_aliens]
-        self.three_columns_group = self.four_columns_group[:-1]
-        self.two_columns_group = self.three_columns_group[:-1]
-        self.columns_shell = [self.three_columns_group, self.two_columns_group, self.four_columns_group]
-        self.single_column_states_left = [CS.FIRSTCOLUMNLEFT, 
+        self.single_column_states_left = [CS.FIRSTCOLUMNLEFT, CS.FOURTHCOLUMNLEFT,
                                         CS.SECONDCOLUMNLEFT, CS.THIRDCOLUMNLEFT]
-        self.single_column_states_right = [CS.FIRSTCOLUMNRIGHT, 
+        self.single_column_states_right = [CS.FIRSTCOLUMNRIGHT, CS.FOURTHCOLUMNRIGHT,
                                         CS.SECONDCOLUMNRIGHT, CS.THIRDCOLUMNRIGHT]
-        self.collision_column_list = [CS.FIRSTTWO, CS.LASTTWO, CS.ENDTWO]
+        self.collision_column_list = [CS.FIRSTTWO, CS.TWOTHREE, CS.ONETHREE, CS.ONEFOUR, CS.TWOFOUR, CS.THREEFOUR]
+        self.split_rows = [AP.TWOROWS, AP.THREEROWS, AP.FOURROWS]
         # Alien bullet group
         self.alien_bullets = pygame.sprite.Group()
     
@@ -55,7 +53,7 @@ class Horde:
 
     def _check_bullet_collisions(self):
         """Check the alien projectile collisions with the ship (and shield with beam)"""
-        if self.alien_pattern in [AP.THREEROWS, AP.BASIC, AP.TWOROWS]:
+        if self.alien_pattern in [AP.THREEROWS, AP.BASIC, AP.TWOROWS, AP.FOURROWS]:
             if pygame.sprite.spritecollide(self.ship, self.alien_bullets, True):
                 self.ai_game._ship_hit()
         elif self.alien_pattern == AP.BOSSROOM:
@@ -80,8 +78,8 @@ class Horde:
             # Look for alien-ship collisions.
             if pygame.sprite.spritecollideany(self.ship, self.aliens):
                 self.ai_game._ship_hit()
-        elif self.alien_pattern in [AP.THREEROWS, AP.TWOROWS]:
-            for group in self.columns_shell[self.alien_pattern._value_[1]]:
+        elif self.alien_pattern in self.split_rows:
+            for group in self.four_columns_group:
                 group.update()
                 if pygame.sprite.spritecollideany(self.ship, group):
                     self.ai_game._ship_hit()
@@ -105,11 +103,11 @@ class Horde:
                     self.time_since_shot = 0
                     new_bullet = AlienBullet(self, self.alien_start_list[x])
                     self.alien_bullets.add(new_bullet)
-        elif self.alien_pattern == AP.THREEROWS or self.alien_pattern == AP.TWOROWS:
+        elif self.alien_pattern in self.split_rows:
             # If using rows instead of columns, this will not work
             if (len(self.alien_bullets) <= self.settings.alien_bullets_allowed):
                 for address in self.shooter_alien_addresses:
-                    for group in self.columns_shell[self.alien_pattern._value_[1]]:
+                    for group in self.four_columns_group:
                         if (self._check_in_front(address, group) and 
                         self.alien_start_list[address] in group) and self.time_since_shot >= 50:
                             self.time_since_shot = 0
@@ -153,8 +151,8 @@ class Horde:
         alien_width, alien_height = alien.rect.size
         available_space_x = self.settings.screen_width - (2 * alien_width)
         self.number_aliens_x = available_space_x // (2 * alien_width)
-        # Ensures that TWOROWS can be divided evenly
-        if self.alien_pattern == AP.TWOROWS and self.number_aliens_x % 2 != 0:
+        # Ensures that even split rows can be divided evenly
+        if self.alien_pattern in [AP.TWOROWS, AP.FOURROWS] and self.number_aliens_x % 2 != 0:
             self.number_aliens_x -= 1
             self.change_offset = True
         else: self.change_offset = False
@@ -193,18 +191,15 @@ class Horde:
             self.shooter_alien_addresses.append(alien_number + row_number * self.number_aliens_x)
         if self.alien_pattern == AP.BASIC:
             self.aliens.add(alien)
-        elif self.alien_pattern == AP.THREEROWS:
-            if alien_number < self.number_aliens_x // 3:
+        elif self.alien_pattern in self.split_rows:
+            number_rows = self.alien_pattern._value_[2]
+            if alien_number < self.number_aliens_x // number_rows:
                 self.column1_aliens.add(alien)
-            elif alien_number < self.number_aliens_x // 1.5:
+            elif alien_number < self.number_aliens_x // (number_rows / 2):
                 self.column2_aliens.add(alien)
-            else:
+            elif alien_number < self.number_aliens_x // (number_rows / 3):
                 self.column3_aliens.add(alien)
-        elif self.alien_pattern == AP.TWOROWS:
-            if alien_number < self.number_aliens_x // 2:
-                self.column1_aliens.add(alien)
-            else:
-                self.column2_aliens.add(alien)
+            else: self.column4_aliens.add(alien)
         self.alien_start_list.append(alien)
 
     def _check_fleet_edges(self):
@@ -214,8 +209,8 @@ class Horde:
                 if alien.check_edges() == CS.ONEGROUP:
                     self._change_fleet_direction()
                     break
-        elif self.alien_pattern in [AP.THREEROWS, AP.TWOROWS]:
-            for row_group in self.columns_shell[self.alien_pattern._value_[1]]:
+        elif self.alien_pattern in self.split_rows:
+            for row_group in self.four_columns_group:
                 for alien in row_group:
                     check = alien.check_edges()
                     if check in self.single_column_states_right or check in self.single_column_states_left:
@@ -227,13 +222,13 @@ class Horde:
         """Respond if a column hits the edge of the screen"""
         check_value = check._value_[0]
         self.settings.column_direction_list[check_value] *= -1
-        self._drop_alien_group(self.three_columns_group[check_value])
+        self._drop_alien_group(self.four_columns_group[check_value])
         if check in self.single_column_states_left:
-            for alien in self.three_columns_group[check_value]:
+            for alien in self.four_columns_group[check_value]:
                 alien.x += self.settings.alien_speed
                 alien.rect.x = alien.x
         elif check in self.single_column_states_right:
-            for alien in self.three_columns_group[check_value]:
+            for alien in self.four_columns_group[check_value]:
                 alien.x -= self.settings.alien_speed
                 alien.rect.x = alien.x
 
@@ -241,8 +236,8 @@ class Horde:
         """Respond if columns collide"""
         for column in check._value_:
             self.settings.column_direction_list[column] *= -1
-            self._drop_alien_group(self.three_columns_group[column])
-            for alien in self.three_columns_group[column]:
+            self._drop_alien_group(self.four_columns_group[column])
+            for alien in self.four_columns_group[column]:
                 if column == check._value_[0]:
                     alien.x -= self.settings.alien_speed
                 elif column == check._value_[1]:
@@ -258,8 +253,8 @@ class Horde:
                     # Treat it as if a ship got hit.
                     self.ai_game._ship_hit()
                     break
-        elif self.alien_pattern in [AP.THREEROWS, AP.TWOROWS]:
-            for group in self.columns_shell[self.alien_pattern._value_[1]]:
+        elif self.alien_pattern in self.split_rows:
+            for group in self.four_columns_group:
                 for alien in group:
                     if alien.rect.bottom >= screen_rect.bottom:
                         self.ai_game._ship_hit()
@@ -275,4 +270,4 @@ class Horde:
     def _drop_alien_group(self, group):
         """For more selective dropping of groups"""
         for alien in group:
-            alien.rect.y += self.settings.group_drop_speed
+            alien.rect.y += (self.settings.group_drop_speed / self.alien_pattern._value_[2])

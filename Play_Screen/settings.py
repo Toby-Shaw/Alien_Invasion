@@ -12,8 +12,8 @@ class Settings:
         self.ship_limit = 3
 
         # Alien settings
-        self.fleet_drop_speed = 10
-        self.group_drop_speed = 7
+        self.fleet_drop_speed = 15
+        self.group_drop_speed = 21
 
         # Initial speed modifier
         self.initial_modifier = 1.1
@@ -69,7 +69,9 @@ class Settings:
         self.column1_direction = 1
         self.column2_direction = -1
         self.column3_direction = 1
-        self.column_direction_list = [self.column1_direction, self.column2_direction, self.column3_direction]
+        self.column4_direction = -1
+        self.column_direction_list = [self.column1_direction, self.column2_direction, self.column3_direction,
+                    self.column4_direction]
 
         # Scoring
         self.alien_points = 50

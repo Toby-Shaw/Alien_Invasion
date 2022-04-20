@@ -84,7 +84,7 @@ class Keychecker:
         elif event.key == pygame.K_q or event.key == pygame.K_ESCAPE:
             self._check_escape_events()
         elif event.key == pygame.K_b and self.ai.cheats:
-            for group in self.ai.horde.three_columns_group:
+            for group in self.ai.horde.four_columns_group:
                 group.empty()
         elif event.key == pygame.K_n and self.ai.cheats:
             self.ai.horde.boss.health -= 100

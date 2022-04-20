@@ -111,6 +111,7 @@ class AlienInvasion:
         self.game_sounds = GameSounds(mute = True)
         # Important for new_level final frames
         self.random_flag = 0
+        self.split_rows = [AP.TWOROWS, AP.THREEROWS, AP.FOURROWS]
 
     def run_game(self):
         """Start the main loop for the game."""
@@ -151,13 +152,13 @@ class AlienInvasion:
         self.sb.prep_ships()
         self.sb.edited = False
         self.game_sounds.sound_channel.play(self.game_sounds.start_sound)
-        self.alien_pattern = AP.THREEROWS
+        self.alien_pattern = AP.FOURROWS
 
         # Get rid of any remaining aliens and bullets.
         self.horde.aliens.empty()
         self.horde.boss.alien_bullets.empty()
         self.bullets.empty()
-        for group in self.horde.three_columns_group:
+        for group in self.horde.four_columns_group:
             group.empty()
         self.horde.alien_bullets.empty()
         self.horde.boss_shell.empty()
@@ -264,15 +265,10 @@ class AlienInvasion:
             self.collisions = pygame.sprite.groupcollide(
             self.bullets, self.horde.aliens, self.settings.normal_bullet, True)
             self.collision_shell.append(self.collisions)
-        elif self.alien_pattern == AP.TWOROWS:
-            for index in range(len(self.horde.two_columns_group)):
-                self.collisions = pygame.sprite.groupcollide(self.bullets, self.horde.two_columns_group[index], 
-                        self.settings.normal_bullet, True)
-                self.collision_shell.append(self.collisions)
-        elif self.alien_pattern == AP.THREEROWS:
-            for index in range(len(self.horde.three_columns_group)):
+        elif self.alien_pattern in self.split_rows:
+            for index in range(len(self.horde.four_columns_group)):
                 self.collisions = pygame.sprite.groupcollide(
-                    self.bullets, self.horde.three_columns_group[index], self.settings.normal_bullet, True)
+                    self.bullets, self.horde.four_columns_group[index], self.settings.normal_bullet, True)
                 self.collision_shell.append(self.collisions)
         elif self.alien_pattern == AP.BOSSROOM:
             self.collisions = pygame.sprite.spritecollide(self.horde.boss, self.bullets, True)
@@ -298,14 +294,13 @@ class AlienInvasion:
         if self.alien_pattern == AP.BASIC:
             if not self.horde.aliens:
                 self._delay_frame_new_level()
-        elif self.alien_pattern == AP.THREEROWS:
-            # if any exist, don't do anything, otherwise new level
-            if not self.horde.column3_aliens and not self.horde.column2_aliens and not self.horde.column1_aliens:
-                self._delay_frame_new_level()
-        elif self.alien_pattern == AP.TWOROWS:
-            if not self.horde.column1_aliens and not self.horde.column2_aliens:
-                self._delay_frame_new_level()
-            
+        elif self.alien_pattern in self.split_rows:
+            placeholder = 0
+            for x in self.horde.four_columns_group:
+                if x:
+                    placeholder += 1
+            if not placeholder:
+                self._delay_frame_new_level()           
         elif self.alien_pattern == AP.BOSSROOM:
             if self.horde.boss.health == 0:
                 self.alien_pattern = AP.THREEROWS
@@ -363,14 +358,9 @@ class AlienInvasion:
             self.warp_square = AbilityButton(self, "S", 170)
             self.strong_bullet_square = AbilityButton(self, "B", 70)
             self.game_sounds.change_back()
-        if self.alien_pattern in [AP.THREEROWS, AP.BASIC, AP.TWOROWS]:
+        if self.alien_pattern in [AP.THREEROWS, AP.BASIC, AP.TWOROWS, AP.FOURROWS]:
             self.horde._create_fleet()
             self.settings.increase_speed()
-            # Reset speeds sometimes
-            if random.randint(1, 2) == 2:
-                self.settings.column_direction_list[0] = 1
-                self.settings.column_direction_list[1] = -1
-                self.settings.column_direction_list[2] = 1
         self.strong_bullet_square._reset_cooldown()
         self.warp_square._reset_cooldown()
         self.settings.warp_up = False
@@ -388,17 +378,12 @@ class AlienInvasion:
 
             # Get rid of any remaining aliens and bullets
             self.horde.aliens.empty()
-            for group in self.horde.three_columns_group:
+            for group in self.horde.four_columns_group:
                 group.empty()
             self.bullets.empty()
             self.horde.boss.alien_bullets.empty()
             self.horde.boss_shell.empty()
             self.horde.alien_bullets.empty()
-
-            # Reset directions
-            self.settings.column_direction_list[0] = 1
-            self.settings.column_direction_list[1] = -1   
-            self.settings.column_direction_list[2] = 1
 
             # Reset strong bullet
             self.settings.normal_bullet_reset()
@@ -413,7 +398,7 @@ class AlienInvasion:
             self.settings.bullet_speed *= 0.95
 
             # Create a new fleet and center the ship.
-            if self.alien_pattern in [AP.THREEROWS, AP.BASIC, AP.TWOROWS]:
+            if self.alien_pattern in [AP.THREEROWS, AP.BASIC, AP.TWOROWS, AP.FOURROWS]:
                 self.horde._create_fleet()
                 self.ship.center_ship()
                 sleep(1)
@@ -446,11 +431,8 @@ class AlienInvasion:
             alien_bullet.draw_alien_bullet()
         if self.alien_pattern == AP.BASIC:
             self.horde.aliens.draw(self.screen)
-        elif self.alien_pattern == AP.THREEROWS:
-            for group in self.horde.three_columns_group:
-                group.draw(self.screen)
-        elif self.alien_pattern == AP.TWOROWS:
-            for group in self.horde.three_columns_group:
+        elif self.alien_pattern in self.split_rows:
+            for group in self.horde.four_columns_group:
                 group.draw(self.screen)
         elif self.alien_pattern == AP.BOSSROOM:
             self.horde.boss.draw()

@@ -35,7 +35,7 @@ class Alien(Sprite):
             self.x += (self.settings.alien_speed * 
                         self.settings.fleet_direction)   
         # This is the same idea, just with different speeds+groups
-        elif self.ap in [AP.THREEROWS, AP.TWOROWS]:
+        elif self.ap in self.ai_game.split_rows:
             if self in self.ai_game.column1_aliens:
                 self.x += (self.settings.alien_speed
                          * self.settings.column_direction_list[0])
@@ -45,6 +45,9 @@ class Alien(Sprite):
             elif self in self.ai_game.column3_aliens:
                 self.x += (self.settings.alien_speed *
                         self.settings.column_direction_list[2])
+            elif self in self.ai_game.column4_aliens:
+                self.x += (self.settings.alien_speed *
+                        self.settings.column_direction_list[3])
         self.rect.x = self.x
     
     def check_edges(self):
@@ -53,42 +56,40 @@ class Alien(Sprite):
         if self.ap == AP.BASIC:
             if self.rect.right >= screen_rect.right or self.rect.left <= 0:
                 return CS.ONEGROUP
-        elif self.ap == AP.THREEROWS:
+        elif self.ap in self.ai_game.split_rows:
             # Checks for any collisions between any of the groups
             if self in self.ai_game.column1_aliens:
-                if pygame.sprite.spritecollideany(self, self.ai_game.column2_aliens):
-                    return CS.FIRSTTWO
-                elif pygame.sprite.spritecollideany(self, self.ai_game.column3_aliens):
-                    return CS.ENDTWO
-                elif self.rect.left <= 0:
+                if self.rect.left <= 0:
                     return CS.FIRSTCOLUMNLEFT
                 elif self.rect.right >= screen_rect.right:
                     return CS.FIRSTCOLUMNRIGHT
+                elif pygame.sprite.spritecollideany(self, self.ai_game.column2_aliens):
+                    return CS.FIRSTTWO
+                elif pygame.sprite.spritecollideany(self, self.ai_game.column3_aliens):
+                    return CS.ONETHREE
+                elif pygame.sprite.spritecollideany(self, self.ai_game.column4_aliens):
+                    return CS.ONEFOUR
             elif self in self.ai_game.column2_aliens:
-                if pygame.sprite.spritecollideany(self, self.ai_game.column3_aliens):
-                    return CS.LASTTWO
-                elif self.rect.right >= screen_rect.right:
+                if self.rect.right >= screen_rect.right:
                     return CS.SECONDCOLUMNRIGHT
                 elif self.rect.left <= 0:
                     return CS.SECONDCOLUMNLEFT
+                elif pygame.sprite.spritecollideany(self, self.ai_game.column3_aliens):
+                    return CS.TWOTHREE
+                elif pygame.sprite.spritecollideany(self, self.ai_game.column4_aliens):
+                    return CS.TWOFOUR
             elif self in self.ai_game.column3_aliens:
                 if self.rect.right >= screen_rect.right:
                     return CS.THIRDCOLUMNRIGHT
                 elif self.rect.left <= 0:
                     return CS.THIRDCOLUMNLEFT
-        elif self.ap == AP.TWOROWS:
-            if self in self.ai_game.column1_aliens:
-                if pygame.sprite.spritecollideany(self, self.ai_game.column2_aliens):
-                    return CS.FIRSTTWO
-                elif self.rect.left <= 0:
-                    return CS.FIRSTCOLUMNLEFT
-                elif self.rect.right >= screen_rect.right:
-                    return CS.FIRSTCOLUMNRIGHT
-            elif self in self.ai_game.column2_aliens:
+                elif pygame.sprite.spritecollideany(self, self.ai_game.column4_aliens):
+                    return CS.THREEFOUR
+            elif self in self.ai_game.column4_aliens:
                 if self.rect.right >= screen_rect.right:
-                    return CS.SECONDCOLUMNRIGHT
+                    return CS.FOURTHCOLUMNRIGHT
                 elif self.rect.left <= 0:
-                    return CS.SECONDCOLUMNLEFT
+                    return CS.FOURTHCOLUMNLEFT
                 
     def change_color(self, new_color):
         """Change the alien color and retain previous attributes"""

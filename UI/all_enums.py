@@ -3,24 +3,29 @@ from enum import Enum
 class CollisionsStates(Enum):
     ONEGROUP = (0, 1, 2)
     FIRSTTWO = (0, 1)
-    LASTTWO = (1, 2)
-    ENDTWO = (0, 2)
+    TWOTHREE = (1, 2)
+    ONETHREE = (0, 2)
+    ONEFOUR = (0, 3)
+    TWOFOUR = (1, 3)
+    THREEFOUR = (2, 3)
     # Second value of the tuples is for distinction in lists for left/right
-    FIRSTCOLUMNLEFT = (0, 3)
-    FIRSTCOLUMNRIGHT = (0, 4)
-    SECONDCOLUMNLEFT = (1, 3)
-    SECONDCOLUMNRIGHT = (1, 4)
-    THIRDCOLUMNLEFT = (2, 3)
-    THIRDCOLUMNRIGHT = (2, 4)
-    FOURTHCOLUMNLEFT = (3, 3)
-    FOURTHCOLUMNRIGHT = (3, 4)
+    FIRSTCOLUMNLEFT = (0, 10)
+    FIRSTCOLUMNRIGHT = (0, 20)
+    SECONDCOLUMNLEFT = (1, 10)
+    SECONDCOLUMNRIGHT = (1, 20)
+    THIRDCOLUMNLEFT = (2, 10)
+    THIRDCOLUMNRIGHT = (2, 20)
+    FOURTHCOLUMNLEFT = (3, 10)
+    FOURTHCOLUMNRIGHT = (3, 20)
 
 class AlienPattern(Enum):
     BASIC = (0, 0)
-    # 2nd number only really matters for TWO THREE, and FOUR, helps shorten code as a list index for a column shell list
-    TWOROWS = (0.5, 1)
-    THREEROWS = (1, 0)
-    FOURROWS = (0.7, 2)
+    # 2nd number only really matters for TWO THREE, and FOUR, 
+    # helps shorten code as a list index for a column shell list
+    # Third number helps shorten assigning aliens to columns
+    TWOROWS = (0.5, 1, 2)
+    THREEROWS = (1, 0, 3)
+    FOURROWS = (0.7, 2, 4)
     BOSSROOM = (2, 0)
 
 class GameStates(Enum):
