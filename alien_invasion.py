@@ -108,7 +108,7 @@ class AlienInvasion:
         self.various_alien_bullet_groups = [self.horde.alien_bullets, self.horde.boss.alien_bullets]
         self.general_play = True
         # Music
-        self.game_sounds = GameSounds(mute = False)
+        self.game_sounds = GameSounds(mute = True)
         # Important for new_level final frames
         self.random_flag = 0
 
@@ -326,7 +326,7 @@ class AlienInvasion:
         # Finagled a way to get all groups to work regardless of pattern
         # By doing odd alien_pattern thing, will make more flexible later
         if (pygame.sprite.spritecollide(self.warp_shield, 
-            self.various_alien_bullet_groups[int(self.alien_pattern._value_ // 2)], self.settings.warp_up)
+            self.various_alien_bullet_groups[int(self.alien_pattern._value_[0] // 2)], self.settings.warp_up)
             and self.settings.warp_up):
                 self._shield_hit()
     
