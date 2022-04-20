@@ -230,6 +230,7 @@ class AlienInvasion:
     def _fire_bullet(self):
         """Create a new bullet and add it to the bullets group"""
         if len(self.bullets) < self.settings.bullets_allowed:
+            self.game_sounds.sound_channel.play(self.game_sounds.bullet_fired, 0, 500)
             self._strong_bullet_timer()
             new_bullet = Bullet(self)
             self.bullets.add(new_bullet)
@@ -325,7 +326,7 @@ class AlienInvasion:
         # Finagled a way to get all groups to work regardless of pattern
         # By doing odd alien_pattern thing, will make more flexible later
         if (pygame.sprite.spritecollide(self.warp_shield, 
-            self.various_alien_bullet_groups[self.alien_pattern._value_ // 2], self.settings.warp_up)
+            self.various_alien_bullet_groups[int(self.alien_pattern._value_ // 2)], self.settings.warp_up)
             and self.settings.warp_up):
                 self._shield_hit()
     

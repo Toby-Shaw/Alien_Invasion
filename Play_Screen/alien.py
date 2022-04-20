@@ -35,7 +35,7 @@ class Alien(Sprite):
             self.x += (self.settings.alien_speed * 
                         self.settings.fleet_direction)   
         # This is the same idea, just with different speeds+groups
-        elif self.ap == AP.THREEROWS:
+        elif self.ap in [AP.THREEROWS, AP.TWOROWS]:
             if self in self.ai_game.column1_aliens:
                 self.x += (self.settings.alien_speed
                          * self.settings.column_direction_list[0])
@@ -76,7 +76,20 @@ class Alien(Sprite):
                     return CS.THIRDCOLUMNRIGHT
                 elif self.rect.left <= 0:
                     return CS.THIRDCOLUMNLEFT
-
+        elif self.ap == AP.TWOROWS:
+            if self in self.ai_game.column1_aliens:
+                if pygame.sprite.spritecollideany(self, self.ai_game.column2_aliens):
+                    return CS.FIRSTTWO
+                elif self.rect.left <= 0:
+                    return CS.FIRSTCOLUMNLEFT
+                elif self.rect.right >= screen_rect.right:
+                    return CS.FIRSTCOLUMNRIGHT
+            elif self in self.ai_game.column2_aliens:
+                if self.rect.right >= screen_rect.right:
+                    return CS.SECONDCOLUMNRIGHT
+                elif self.rect.left <= 0:
+                    return CS.SECONDCOLUMNLEFT
+                
     def change_color(self, new_color):
         """Change the alien color and retain previous attributes"""
         if new_color == AC.RED:

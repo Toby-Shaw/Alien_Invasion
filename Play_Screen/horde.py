@@ -111,7 +111,7 @@ class Horde:
                     self.time_since_shot = 0
                     new_bullet = AlienBullet(self, self.alien_start_list[x])
                     self.alien_bullets.add(new_bullet)
-        elif self.alien_pattern == AP.THREEROWS:
+        elif self.alien_pattern == AP.THREEROWS or self.alien_pattern == AP.TWOROWS:
             # If using rows instead of columns, this will not work
             if (len(self.alien_bullets) <= self.settings.alien_bullets_allowed):
                 for address in self.shooter_alien_addresses:
@@ -199,17 +199,26 @@ class Horde:
                 self.column2_aliens.add(alien)
             else:
                 self.column3_aliens.add(alien)
+        elif self.alien_pattern == AP.TWOROWS:
+            if alien_number < self.number_aliens_x // 2:
+                self.column1_aliens.add(alien)
+            else:
+                self.column2_aliens.add(alien)
         self.alien_start_list.append(alien)
 
     def _check_fleet_edges(self):
         """Respond if aliens have reached an edge."""
+        if self.alien_pattern == AP.THREEROWS:
+            column_group = self.three_columns_group
+        elif self.alien_pattern == AP.TWOROWS:
+            column_group = self.two_columns_group
         if self.alien_pattern == AP.BASIC:
             for alien in self.aliens.sprites():
                 if alien.check_edges() == CS.ONEGROUP:
                     self._change_fleet_direction()
                     break
-        elif self.alien_pattern == AP.THREEROWS:
-            for row_group in self.three_columns_group:
+        elif self.alien_pattern in [AP.THREEROWS, AP.TWOROWS]:
+            for row_group in column_group:
                 for alien in row_group:
                     check = alien.check_edges()
                     if check in self.single_column_states_right or check in self.single_column_states_left:

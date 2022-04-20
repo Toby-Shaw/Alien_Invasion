@@ -65,7 +65,6 @@ class Keychecker:
             if self.ai.stats.game_layer == GS.MAINMENU:
                 self.ai._start_game()
             elif self.ai.stats.game_layer == GS.PLAYSCREEN:
-                self.ai.game_sounds.sound_channel.play(self.ai.game_sounds.bullet_fired, 0, 500)
                 self.ai._fire_bullet()
             elif self.ai.stats.game_layer == GS.PAUSEMENU:
                 self.ai.stats.game_layer = GS.PLAYSCREEN
