@@ -14,11 +14,12 @@ class Alien(Sprite):
         self.settings = ai_game.settings
         self.ap = ai_game.alien_pattern
         self.ai_game = ai_game
-
+        self.color = color
         # Load the alien image and set its rect attribute
         if color == AC.GREEN:
             self.image = pygame.image.load("Games/Alien_Invasion/Images/alien.bmp")
         elif color == AC.RED:
+            self.color = AC.RED
             self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_red.bmp")
         self.rect = self.image.get_rect()
 

@@ -24,6 +24,7 @@ from UI.slider import Slider
 from Play_Screen.boss import Boss
 from UI.all_enums import BossPattern as BP
 from UI.key_checker import Keychecker
+from UI.all_enums import AlienColors as AC
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -152,7 +153,7 @@ class AlienInvasion:
         self.sb.prep_ships()
         self.sb.edited = False
         self.game_sounds.sound_channel.play(self.game_sounds.start_sound)
-        self.alien_pattern = AP.FOURROWS
+        self.alien_pattern = random.choice(self.split_rows)
 
         # Get rid of any remaining aliens and bullets.
         self.horde.aliens.empty()
@@ -260,16 +261,22 @@ class AlienInvasion:
 
     def _check_bullet_alien_collisions(self):
         """Respond to bullet-alien collisions."""
-        self.collision_shell = []
+        #self.collision_shell = []
+        self.collided_indexes = []
+        self.counter = 0
         if self.alien_pattern == AP.BASIC:
             self.collisions = pygame.sprite.groupcollide(
             self.bullets, self.horde.aliens, self.settings.normal_bullet, True)
-            self.collision_shell.append(self.collisions)
+            #self.collision_shell.append(self.collisions)
         elif self.alien_pattern in self.split_rows:
             for index in range(len(self.horde.four_columns_group)):
                 self.collisions = pygame.sprite.groupcollide(
-                    self.bullets, self.horde.four_columns_group[index], self.settings.normal_bullet, True)
-                self.collision_shell.append(self.collisions)
+                    self.bullets, self.horde.four_columns_group[index], self.settings.normal_bullet, False)
+                #print(self.collisions.values())
+                #self.specific_index = self.horde.alien_start_list.index(self.collisions.values()[0])
+                #self.collision_shell.append(self.collisions)
+                if self.collisions:
+                    self.collided_indexes.append(index)
         elif self.alien_pattern == AP.BOSSROOM:
             self.collisions = pygame.sprite.spritecollide(self.horde.boss, self.bullets, True)
             if self.collisions:
@@ -283,11 +290,19 @@ class AlienInvasion:
                     if self.horde.boss.health >= damage: self.horde.boss.health -= damage
                     elif self.horde.boss.health < damage: self.horde.boss.health = 0
                     self.horde.boss.healthbar._update_health()
-        for collision in self.collision_shell:
-            for aliens in collision.values():
+        if self.alien_pattern == AP.BASIC:
+            for aliens in self.collisions.values():
                 self.stats.score += self.settings.alien_points * len(aliens)
-            self.sb.prep_score()
-            self.sb.check_high_score()
+        if self.alien_pattern in self.split_rows:
+            for index in self.collided_indexes:
+                print(self.collided_indexes)
+                """if index in self.horde.shooter_alien_addresses:
+                    self.stats.score += self.settings.alien_points * 2
+                else: self.stats.score += self.settings.alien_points"""
+                self.stats.score += self.settings.alien_points
+
+        self.sb.prep_score()
+        self.sb.check_high_score()
         # Random flag serves to have the half second sleep between levels
         # occur after the final alien has been deleted,
         # for aesthetic purposes
@@ -359,6 +374,7 @@ class AlienInvasion:
             self.strong_bullet_square = AbilityButton(self, "B", 70)
             self.game_sounds.change_back()
         if self.alien_pattern in [AP.THREEROWS, AP.BASIC, AP.TWOROWS, AP.FOURROWS]:
+            self.alien_pattern = random.choice(self.split_rows)
             self.horde._create_fleet()
             self.settings.increase_speed()
         self.strong_bullet_square._reset_cooldown()
