@@ -266,17 +266,19 @@ class AlienInvasion:
         self.counter = 0
         if self.alien_pattern == AP.BASIC:
             self.collisions = pygame.sprite.groupcollide(
-            self.bullets, self.horde.aliens, self.settings.normal_bullet, True)
-            #self.collision_shell.append(self.collisions)
+            self.bullets, self.horde.aliens, self.settings.normal_bullet, False)
+            for aliens in self.collisions.values():
+                for alien in aliens:    
+                    self.collided_indexes.append(alien.alien_address)
+                    pygame.sprite.Group.remove(self.horde.aliens, alien)
         elif self.alien_pattern in self.split_rows:
             for index in range(len(self.horde.four_columns_group)):
                 self.collisions = pygame.sprite.groupcollide(
                     self.bullets, self.horde.four_columns_group[index], self.settings.normal_bullet, False)
-                #print(self.collisions.values())
-                #self.specific_index = self.horde.alien_start_list.index(self.collisions.values()[0])
-                #self.collision_shell.append(self.collisions)
-                if self.collisions:
-                    self.collided_indexes.append(index)
+                for aliens in self.collisions.values():
+                    for alien in aliens:    
+                        self.collided_indexes.append(alien.alien_address)
+                        pygame.sprite.Group.remove(self.horde.four_columns_group[index], alien)
         elif self.alien_pattern == AP.BOSSROOM:
             self.collisions = pygame.sprite.spritecollide(self.horde.boss, self.bullets, True)
             if self.collisions:
@@ -290,16 +292,10 @@ class AlienInvasion:
                     if self.horde.boss.health >= damage: self.horde.boss.health -= damage
                     elif self.horde.boss.health < damage: self.horde.boss.health = 0
                     self.horde.boss.healthbar._update_health()
-        if self.alien_pattern == AP.BASIC:
-            for aliens in self.collisions.values():
-                self.stats.score += self.settings.alien_points * len(aliens)
-        if self.alien_pattern in self.split_rows:
-            for index in self.collided_indexes:
-                print(self.collided_indexes)
-                """if index in self.horde.shooter_alien_addresses:
-                    self.stats.score += self.settings.alien_points * 2
-                else: self.stats.score += self.settings.alien_points"""
-                self.stats.score += self.settings.alien_points
+        for index in self.collided_indexes:
+            if index in self.horde.shooter_alien_addresses:
+                self.stats.score += self.settings.alien_points * 2
+            else: self.stats.score += self.settings.alien_points
 
         self.sb.prep_score()
         self.sb.check_high_score()

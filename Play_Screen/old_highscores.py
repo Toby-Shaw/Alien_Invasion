@@ -6,5 +6,5 @@ toby_old_one = 1674240
 toby_newer_one = 1009970
 # Highscore before glitch fix
 toby_newer_newer_one = 1022887
-
-"173692 140824 17130 850 500 endscore Toby Yargle Ethan pain ---"
+# Highscore before new rows, red aliens, highscore system, and different points for different types
+total = '173692 142840 140824 48200 17130 / Toby Toby Yargle sup Ethan'

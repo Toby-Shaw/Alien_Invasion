@@ -184,6 +184,7 @@ class Horde:
         alien.x = alien_width + offset + 2 * alien_width * alien_number
         alien.rect.x = alien.x
         alien.rect.y = alien_height + 2 * alien.rect.height * row_number
+        alien._generate_alien_address(alien_number, row_number)
         # 1 in 3 aliens are a shooter alien
         if random.randint(1, self.number_aliens_x * 4) <= (self.ai_game.stats.level * 2) and self.shooters_made <= (self.ai_game.stats.level + 2):
             alien.change_color(AC.RED)

@@ -98,4 +98,7 @@ class Alien(Sprite):
             self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_red.bmp")
         elif new_color == AC.GREEN:
             self.image = pygame.image.load("Games/Alien_Invasion/Images/alien.bmp")
+    
+    def _generate_alien_address(self, alien_number, row_number):
+        self.alien_address = alien_number + row_number * self.ai_game.number_aliens_x
                     
