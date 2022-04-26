@@ -308,14 +308,12 @@ class AlienInvasion:
         elif self.alien_pattern in self.split_rows:
             placeholder = 0
             for x in self.horde.four_columns_group:
-                if x:
-                    placeholder += 1
-            if not placeholder:
-                self._delay_frame_new_level()           
+                if x:   placeholder += 1
+            if not placeholder:    self._delay_frame_new_level()           
         elif self.alien_pattern == AP.BOSSROOM:
             if self.horde.boss.health == 0:
                 self.alien_pattern = AP.THREEROWS
-                self.stats.score += 100000
+                self.stats.score += 20000 * self.stats.level
                 self.sb.prep_score()
                 self.sb.check_high_score()
 
@@ -324,8 +322,7 @@ class AlienInvasion:
         if self.random_flag == 1:
             self._new_level()
             self.random_flag = 0
-        elif self.random_flag == 0:
-            self.random_flag = 1
+        elif self.random_flag == 0:   self.random_flag = 1
 
     def _check_alien_bullet_shield_collisions(self):
         """Respond to shield-shooter alien collisions."""

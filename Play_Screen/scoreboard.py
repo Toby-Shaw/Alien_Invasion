@@ -26,6 +26,7 @@ class Scoreboard:
         self.go_ahead = False
         self.letter_number = 0
         self.letter_texts = []
+        self.horizontal_spacing = 7
         self.alphabet = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
         self.displayed_high_score = self.stats.high_score[0]
         self.edited = False
@@ -164,13 +165,23 @@ class Scoreboard:
                 80, (0, 0, 0), 400, 450))
             if self.letter_number > 0:
                 self.letter_texts[self.letter_number].text_rect_list[0].x = (
-                    self.letter_texts[self.letter_number - 1].text_rect_list[0].right + 5)
+                    self.letter_texts[self.letter_number - 1].text_rect_list[0].right + self.horizontal_spacing)
+            self._update_total_length()
             self.letter_number += 1
         elif event.key == pygame.K_BACKSPACE and self.letter_number > 0:
             self.letter_number -= 1
             self.letter_texts.pop(-1)
             self.defined_initials = self.defined_initials[:-1]
+            self._update_total_length()
         elif event.__dict__['key'] == 13 and len(self.defined_initials) >= 2:
             # This works for the enter key
             self.letter_number = 0
             self.go_ahead = True
+    
+    def _update_total_length(self):
+        self.total_length = 0
+        for letter in self.letter_texts:
+            self.total_length += letter.text_rect_list[0].width
+            if letter != self.letter_texts[-1]:
+                self.total_length += self.horizontal_spacing
+        print(self.total_length)
