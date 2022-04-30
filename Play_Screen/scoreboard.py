@@ -167,21 +167,32 @@ class Scoreboard:
                 self.letter_texts[self.letter_number].text_rect_list[0].x = (
                     self.letter_texts[self.letter_number - 1].text_rect_list[0].right + self.horizontal_spacing)
             self._update_total_length()
+            self._center_letters()
             self.letter_number += 1
         elif event.key == pygame.K_BACKSPACE and self.letter_number > 0:
             self.letter_number -= 1
             self.letter_texts.pop(-1)
             self.defined_initials = self.defined_initials[:-1]
             self._update_total_length()
+            self._center_letters()
         elif event.__dict__['key'] == 13 and len(self.defined_initials) >= 2:
             # This works for the enter key
             self.letter_number = 0
             self.go_ahead = True
     
     def _update_total_length(self):
+        """Calculate the total width of the combined letters"""
         self.total_length = 0
         for letter in self.letter_texts:
             self.total_length += letter.text_rect_list[0].width
             if letter != self.letter_texts[-1]:
                 self.total_length += self.horizontal_spacing
-        print(self.total_length)
+
+    def _center_letters(self):
+        """Center all of the letters in the input screen, if there are any"""
+        if self.letter_texts:
+            left_edge = self.letter_texts[0].text_rect_list[0].x
+            center = self.settings.screen_width // 2
+            offset = center - (self.total_length // 2)
+            for letter in self.letter_texts:
+                letter.text_rect_list[0].x += offset - left_edge

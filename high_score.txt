@@ -1,1 +1,1 @@
-15000 1250 50 0 0 / Braylito Toby Toby --- --- 
+15000 1250 150 50 50 / Braylito Toby Irritation Toby --- 
