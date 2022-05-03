@@ -27,6 +27,7 @@ class AlienPattern(Enum):
     THREEROWS = (1, 0, 3)
     FOURROWS = (0.7, 2, 4)
     BOSSROOM = (2, 0)
+    PURPLE = (3, 0)
 
 class GameStates(Enum):
     MAINMENU = 1
@@ -49,3 +50,4 @@ class BossPattern(Enum):
 class AlienColors(Enum):
     GREEN = 1
     RED = 2
+    PURPLE = 3

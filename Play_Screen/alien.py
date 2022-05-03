@@ -19,8 +19,9 @@ class Alien(Sprite):
         if color == AC.GREEN:
             self.image = pygame.image.load("Games/Alien_Invasion/Images/alien.bmp")
         elif color == AC.RED:
-            self.color = AC.RED
             self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_red.bmp")
+        elif color == AC.PURPLE:
+            self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_purple.bmp")
         self.rect = self.image.get_rect()
 
         # Start each new alien near the top left of the screen
@@ -98,6 +99,8 @@ class Alien(Sprite):
             self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_red.bmp")
         elif new_color == AC.GREEN:
             self.image = pygame.image.load("Games/Alien_Invasion/Images/alien.bmp")
+        elif new_color == AC.PURPLE:
+            self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_purple.bmp")
     
     def _generate_alien_address(self, alien_number, row_number):
         self.alien_address = alien_number + row_number * self.ai_game.number_aliens_x

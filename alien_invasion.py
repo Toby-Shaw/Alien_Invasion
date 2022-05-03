@@ -261,7 +261,6 @@ class AlienInvasion:
 
     def _check_bullet_alien_collisions(self):
         """Respond to bullet-alien collisions."""
-        #self.collision_shell = []
         self.collided_indexes = []
         self.counter = 0
         if self.alien_pattern == AP.BASIC:
@@ -313,7 +312,7 @@ class AlienInvasion:
         elif self.alien_pattern == AP.BOSSROOM:
             if self.horde.boss.health == 0:
                 self.alien_pattern = AP.THREEROWS
-                self.stats.score += 20000 * self.stats.level
+                self.stats.score += 5000 * self.stats.level
                 self.sb.prep_score()
                 self.sb.check_high_score()
 
@@ -370,6 +369,8 @@ class AlienInvasion:
             self.alien_pattern = random.choice(self.split_rows)
             self.horde._create_fleet()
             self.settings.increase_speed()
+        elif self.alien_pattern == AP.PURPLE:
+            self.settings.increase_speed()  
         self.strong_bullet_square._reset_cooldown()
         self.warp_square._reset_cooldown()
         self.settings.warp_up = False
