@@ -25,6 +25,7 @@ from Play_Screen.boss import Boss
 from UI.all_enums import BossPattern as BP
 from UI.key_checker import Keychecker
 from UI.all_enums import AlienColors as AC
+from UI.infoboard import InfoBoard as inf
 
 class AlienInvasion:
     """Overall class to manage game assets and behavior."""
@@ -43,6 +44,7 @@ class AlienInvasion:
         self.stats = Gamestats(self)
         self.sb = Scoreboard(self)
         self.kc = Keychecker(self)
+        self.inf = inf(self)
         self.alien_pattern = AP.THREEROWS
 
         self.ship = Ship(self)
@@ -75,18 +77,6 @@ class AlienInvasion:
             (self.settings.screen_width / 2), 180)
         self.game_over = Text(self, "Game Over", 170, (0, 255, 0),
             (self.settings.screen_width / 2), 270)
-
-        # Make the Information text pieces
-        self.strong_bullet_info = Text(self, 
-        """Strong Bullet is an activatable ability that
-        allows your bullets to  pierce multiple enemies.
-        Activate it with the down key or S""", 
-            40, (0, 0, 0), 550, 100)
-        self.shield_info = Text(self, 
-        """Warp Shield is an activatable ability that
-        blocks up to two bullets  from the enemies before breaking.
-        Activate it with the up key or W.""",
-            40, (0, 0, 0), 550, 250)
         self.input_text = Text(self, "Congrats! Your score is one of the top five!  Your Name:",
             70, (0, 0, 0), self.settings.screen_width / 2, 200, line_spacing = 100)
         self.music_text = Text(self, """Music Volume:              Sound Volume:""",
@@ -112,7 +102,7 @@ class AlienInvasion:
         self.game_sounds = GameSounds(mute = True)
         # Important for new_level final frames
         self.random_flag = 0
-        self.split_rows = [AP.TWOROWS, AP.THREEROWS, AP.FOURROWS]
+        self.rows = [AP.TWOROWS, AP.THREEROWS, AP.FOURROWS, AP.BASIC]
 
     def run_game(self):
         """Start the main loop for the game."""
@@ -153,7 +143,7 @@ class AlienInvasion:
         self.sb.prep_ships()
         self.sb.edited = False
         self.game_sounds.sound_channel.play(self.game_sounds.start_sound)
-        self.alien_pattern = random.choice(self.split_rows)
+        self.alien_pattern = random.choice(self.rows)
 
         # Get rid of any remaining aliens and bullets.
         self.horde.aliens.empty()
@@ -263,14 +253,7 @@ class AlienInvasion:
         """Respond to bullet-alien collisions."""
         self.collided_indexes = []
         self.counter = 0
-        if self.alien_pattern == AP.BASIC:
-            self.collisions = pygame.sprite.groupcollide(
-            self.bullets, self.horde.aliens, self.settings.normal_bullet, False)
-            for aliens in self.collisions.values():
-                for alien in aliens:    
-                    self.collided_indexes.append(alien.alien_address)
-                    pygame.sprite.Group.remove(self.horde.aliens, alien)
-        elif self.alien_pattern in self.split_rows:
+        if self.alien_pattern in self.rows:
             for index in range(len(self.horde.four_columns_group)):
                 self.collisions = pygame.sprite.groupcollide(
                     self.bullets, self.horde.four_columns_group[index], self.settings.normal_bullet, False)
@@ -282,7 +265,7 @@ class AlienInvasion:
             self.collisions = pygame.sprite.spritecollide(self.horde.boss, self.bullets, True)
             if self.collisions:
                 if not self.settings.normal_bullet:
-                    damage = int(30 / self.horde.boss.diff)
+                    damage = int(20 / self.horde.boss.diff)
                     if self.horde.boss.health >= damage: self.horde.boss.health -= damage
                     elif self.horde.boss.health < damage: self.horde.boss.health = 0
                     self.horde.boss.healthbar._update_health()
@@ -291,6 +274,7 @@ class AlienInvasion:
                     if self.horde.boss.health >= damage: self.horde.boss.health -= damage
                     elif self.horde.boss.health < damage: self.horde.boss.health = 0
                     self.horde.boss.healthbar._update_health()
+                for x in self.collisions: self.stats.score += self.settings.alien_points // 4
         for index in self.collided_indexes:
             if index in self.horde.shooter_alien_addresses:
                 self.stats.score += self.settings.alien_points * 2
@@ -301,10 +285,7 @@ class AlienInvasion:
         # Random flag serves to have the half second sleep between levels
         # occur after the final alien has been deleted,
         # for aesthetic purposes
-        if self.alien_pattern == AP.BASIC:
-            if not self.horde.aliens:
-                self._delay_frame_new_level()
-        elif self.alien_pattern in self.split_rows:
+        if self.alien_pattern in self.rows:
             placeholder = 0
             for x in self.horde.four_columns_group:
                 if x:   placeholder += 1
@@ -365,12 +346,16 @@ class AlienInvasion:
             self.warp_square = AbilityButton(self, "S", 170)
             self.strong_bullet_square = AbilityButton(self, "B", 70)
             self.game_sounds.change_back()
-        if self.alien_pattern in [AP.THREEROWS, AP.BASIC, AP.TWOROWS, AP.FOURROWS]:
-            self.alien_pattern = random.choice(self.split_rows)
+        # Get a pattern that is not the present pattern
+        if self.alien_pattern in self.rows:
+            exclusion_list = []
+            for x in self.rows:
+                if x != self.alien_pattern: 
+                    exclusion_list.append(x)
+            self.alien_pattern = random.choice(exclusion_list)
+            self.horde._update_aliens()
             self.horde._create_fleet()
             self.settings.increase_speed()
-        elif self.alien_pattern == AP.PURPLE:
-            self.settings.increase_speed()  
         self.strong_bullet_square._reset_cooldown()
         self.warp_square._reset_cooldown()
         self.settings.warp_up = False
@@ -439,9 +424,7 @@ class AlienInvasion:
             alien_bullet.draw_alien_bullet()
         for alien_bullet in self.horde.boss.alien_bullets.sprites():
             alien_bullet.draw_alien_bullet()
-        if self.alien_pattern == AP.BASIC:
-            self.horde.aliens.draw(self.screen)
-        elif self.alien_pattern in self.split_rows:
+        if self.alien_pattern in self.rows:
             for group in self.horde.four_columns_group:
                 group.draw(self.screen)
         elif self.alien_pattern == AP.BOSSROOM:
@@ -504,8 +487,8 @@ class AlienInvasion:
 
         # Draw the information screen when appropriate
         elif self.stats.game_layer == GS.INFOSCREEN:
-            self.strong_bullet_info.draw_text()
-            self.shield_info.draw_text()
+            self.inf.strong_bullet_info.draw_text()
+            self.inf.shield_info.draw_text()
 
         elif self.stats.game_layer == GS.ENDSCREEN:
             self.main_menu.draw_button()

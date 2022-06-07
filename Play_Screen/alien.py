@@ -33,11 +33,7 @@ class Alien(Sprite):
 
     def update(self):
         """Move the alien to the right or left"""
-        if self.ap == AP.BASIC:
-            self.x += (self.settings.alien_speed * 
-                        self.settings.fleet_direction)   
-        # This is the same idea, just with different speeds+groups
-        elif self.ap in self.ai_game.split_rows:
+        if self.ap in self.ai_game.rows:
             if self in self.ai_game.column1_aliens:
                 self.x += (self.settings.alien_speed
                          * self.settings.column_direction_list[0])
@@ -55,10 +51,7 @@ class Alien(Sprite):
     def check_edges(self):
         """Return True if alien is at the edge of screen, or hits other aliens"""
         screen_rect = self.screen.get_rect()
-        if self.ap == AP.BASIC:
-            if self.rect.right >= screen_rect.right or self.rect.left <= 0:
-                return CS.ONEGROUP
-        elif self.ap in self.ai_game.split_rows:
+        if self.ap in self.ai_game.rows:
             # Checks for any collisions between any of the groups
             if self in self.ai_game.column1_aliens:
                 if self.rect.left <= 0:

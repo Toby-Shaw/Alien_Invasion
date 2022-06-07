@@ -13,14 +13,30 @@ class Gamestats:
         """Read the high score from the file in a correct manner"""
         f = open("Games/Alien_Invasion/high_score.txt", "r")
         high_score = str(f.read())
+        if not high_score: 
+            print("Error! HighScore file cleared, replacing with default")
+            high_score = "0 0 0 0 0 / --- --- --- --- ---"
         self.high_score = high_score.split()
         stop_index = self.high_score.index('/')
         self.high_initials = self.high_score[stop_index + 1:]
         self.high_score = self.high_score[0:stop_index]
-        #print(self.high_score)
-        #print(self.high_initials)
         for x in range(len(self.high_score)):
             self.high_score[x] = int(self.high_score[x])
+        if len(self.high_initials) < 5:
+            print("Error! HighScore file altered, missing initials substituted")
+            while len(self.high_initials) != 5:  
+                self.high_initials.append("---")
+        elif len(self.high_initials) > 5:
+            print("Error! HighScore file altered, deleting excess initials")
+            while len(self.high_initials) != 5:  
+                self.high_initials.pop(-1)
+        if len(self.high_score) < 5:
+            print("Error! HighScore file altered, missing scores substituted")
+            while len(self.high_score) != 5:  
+                self.high_score.append(0)
+        elif len(self.high_score) > 5:
+            print("Error! HighScore file altered, deleting excess scores")
+            while len(self.high_score) != 5:  self.high_score.pop(-1)
 
     def reset_stats(self):
         """Initialize stats that can change during the game."""

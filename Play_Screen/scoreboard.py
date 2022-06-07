@@ -21,7 +21,6 @@ class Scoreboard:
         self.text_color = (30, 30, 30)
         self.font = pygame.font.SysFont(None, 36)
         #self.initials_defined = False
-        self.bypass = False
         self.defined_initials = ''
         self.go_ahead = False
         self.letter_number = 0

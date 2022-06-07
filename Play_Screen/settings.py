@@ -13,7 +13,7 @@ class Settings:
 
         # Alien settings
         self.fleet_drop_speed = 15
-        self.group_drop_speed = 21
+        self.group_drop_speed = 15
 
         # Initial speed modifier
         self.initial_modifier = 1.1
@@ -22,7 +22,7 @@ class Settings:
         self.speedup_scale = 1.25
 
         # How quickly alien point values increase
-        self.score_scale = 1.5
+        self.score_scale = 1.2
 
         # How many strong bullets are allowed per powerup
         self.strong_bullets_allowed = 7
@@ -46,7 +46,7 @@ class Settings:
         self.bullet_color = (60, 60, 60)
         self.ship_speed = 5.00 * self.initial_modifier
         self.bullet_speed = 6.0 * self.initial_modifier
-        self.alien_speed = 2 * self.initial_modifier
+        self.alien_speed = 1.9 * self.initial_modifier
         self.bullet_height = 15
         self.bullets_allowed = 4
 

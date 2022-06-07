@@ -1,7 +1,6 @@
 from enum import Enum
 
 class CollisionsStates(Enum):
-    ONEGROUP = (0, 1, 2)
     FIRSTTWO = (0, 1)
     TWOTHREE = (1, 2)
     ONETHREE = (0, 2)
@@ -19,13 +18,15 @@ class CollisionsStates(Enum):
     FOURTHCOLUMNRIGHT = (3, 20)
 
 class AlienPattern(Enum):
-    BASIC = (0, 0)
+    BASIC = (0, 0, 1, 1)
     # 2nd number only really matters for TWO THREE, and FOUR, 
     # helps shorten code as a list index for a column shell list
+    # Coming back later, have no idea what 2nd number does lol
     # Third number helps shorten assigning aliens to columns
-    TWOROWS = (0.5, 1, 2)
-    THREEROWS = (1, 0, 3)
-    FOURROWS = (0.7, 2, 4)
+    # Fourth helps with speed scaling
+    TWOROWS = (0, 1, 2, 1.6)
+    THREEROWS = (0, 0, 3, 2.4)
+    FOURROWS = (0, 2, 4, 3)
     BOSSROOM = (2, 0)
     PURPLE = (3, 0)
 

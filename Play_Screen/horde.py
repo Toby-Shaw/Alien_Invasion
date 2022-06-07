@@ -33,7 +33,7 @@ class Horde:
         self.single_column_states_right = [CS.FIRSTCOLUMNRIGHT, CS.FOURTHCOLUMNRIGHT,
                                         CS.SECONDCOLUMNRIGHT, CS.THIRDCOLUMNRIGHT]
         self.collision_column_list = [CS.FIRSTTWO, CS.TWOTHREE, CS.ONETHREE, CS.ONEFOUR, CS.TWOFOUR, CS.THREEFOUR]
-        self.split_rows = [AP.TWOROWS, AP.THREEROWS, AP.FOURROWS]
+        self.rows = [AP.TWOROWS, AP.THREEROWS, AP.FOURROWS, AP.BASIC]
         # Alien bullet group
         self.alien_bullets = pygame.sprite.Group()
     
@@ -60,7 +60,7 @@ class Horde:
             if pygame.sprite.spritecollide(self.ship, self.boss.alien_bullets, True):
                 if self.boss.rect.bottom >= 550:
                     self.boss.ydirection = -1
-                    self.boss.rect.y -= 20
+                    self.boss.rect.y -= 40
                 self.ai_game._ship_hit()
             elif self.boss.beam_hitbox:
                 if self.settings.warp_up and pygame.Rect.colliderect(self.ai_game.warp_shield.rect, self.boss.beam_rect):
@@ -73,12 +73,7 @@ class Horde:
 
     def _check_alien_ship_collisions_and_update(self):
         """Update, and then check alien-ship collisions"""
-        if self.alien_pattern == AP.BASIC:
-            self.aliens.update()
-            # Look for alien-ship collisions.
-            if pygame.sprite.spritecollideany(self.ship, self.aliens):
-                self.ai_game._ship_hit()
-        elif self.alien_pattern in self.split_rows:
+        if self.alien_pattern in self.rows:
             for group in self.four_columns_group:
                 group.update()
                 if pygame.sprite.spritecollideany(self.ship, group):
@@ -87,23 +82,13 @@ class Horde:
             self.boss.update()
             if pygame.sprite.spritecollide(self.ship, self.boss_shell, False):
                 self.boss.ydirection = -1
-                self.boss.rect.y - 10
+                self.boss.rect.y -= 30
                 self.ai_game._ship_hit()
 
     def _fire_shooter_aliens(self):
         """Have one alien shoot at any one time, earlier list address favored"""
         # Runs through every shooter alien address
-        if self.alien_pattern == AP.BASIC:
-            for x in self.shooter_alien_addresses:
-                # Checks number of bullets, that there is no one in front,
-                # and checks that the alien is alive.
-                if (self.time_since_shot >= 50 and self.alien_start_list[x] in self.aliens 
-                    and len(self.alien_bullets) <= self.settings.alien_bullets_allowed
-                    and self._check_in_front(x, self.aliens)):
-                    self.time_since_shot = 0
-                    new_bullet = AlienBullet(self, self.alien_start_list[x])
-                    self.alien_bullets.add(new_bullet)
-        elif self.alien_pattern in self.split_rows:
+        if self.alien_pattern in self.rows:
             # If using rows instead of columns, this will not work
             if (len(self.alien_bullets) <= self.settings.alien_bullets_allowed):
                 for address in self.shooter_alien_addresses:
@@ -190,9 +175,7 @@ class Horde:
             alien.change_color(AC.RED)
             self.shooters_made += 1
             self.shooter_alien_addresses.append(alien_number + row_number * self.number_aliens_x)
-        if self.alien_pattern == AP.BASIC:
-            self.aliens.add(alien)
-        elif self.alien_pattern in self.split_rows:
+        if self.alien_pattern in self.rows:
             number_rows = self.alien_pattern._value_[2]
             if alien_number < self.number_aliens_x // number_rows:
                 self.column1_aliens.add(alien)
@@ -205,12 +188,7 @@ class Horde:
 
     def _check_fleet_edges(self):
         """Respond if aliens have reached an edge."""
-        if self.alien_pattern == AP.BASIC:
-            for alien in self.aliens.sprites():
-                if alien.check_edges() == CS.ONEGROUP:
-                    self._change_fleet_direction()
-                    break
-        elif self.alien_pattern in self.split_rows:
+        if self.alien_pattern in self.rows:
             for row_group in self.four_columns_group:
                 for alien in row_group:
                     check = alien.check_edges()
@@ -248,27 +226,14 @@ class Horde:
     def _check_aliens_bottom(self):
         """Check if any aliens have reached the bottom of the screen"""
         screen_rect = self.screen.get_rect()
-        if self.alien_pattern == AP.BASIC:
-            for alien in self.aliens.sprites():
-                if alien.rect.bottom >= screen_rect.bottom:
-                    # Treat it as if a ship got hit.
-                    self.ai_game._ship_hit()
-                    break
-        elif self.alien_pattern in self.split_rows:
+        if self.alien_pattern in self.rows:
             for group in self.four_columns_group:
                 for alien in group:
                     if alien.rect.bottom >= screen_rect.bottom:
                         self.ai_game._ship_hit()
                         break
 
-    def _change_fleet_direction(self):
-        """Drop the entire fleet and change the fleet's direction."""
-        if self.alien_pattern == AP.BASIC:
-            self.settings.fleet_direction *= -1
-            for alien in self.aliens.sprites():
-                alien.rect.y += self.settings.fleet_drop_speed
-
     def _drop_alien_group(self, group):
         """For more selective dropping of groups"""
         for alien in group:
-            alien.rect.y += (self.settings.group_drop_speed / self.alien_pattern._value_[2])
+            alien.rect.y += (self.settings.group_drop_speed / self.alien_pattern._value_[3])
