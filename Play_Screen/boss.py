@@ -43,11 +43,10 @@ class Boss(Sprite):
             # 1 = right/down, left = -1/up
         self.xdirection = directions[0]
         self.ydirection = directions[1]
-        self.all_patterns = {BP.SHOOTBASIC: ri(2, 4), BP.MACHINEGUN: ri((5 + self.diff), 9 + self.diff),
-                BP.DIAGONAL: ri(2 + self.diff, 5 + self.diff), BP.DARTTOHIT: ri(1, 5), 
-                BP.BEAMATTACK: ri(4, 7), BP.DARTWITHFASTFIRE: ri(0 + self.diff, 3 + self.diff)}
+        self._reload_random_bouncenumbers()
         self.shooter_patterns = (BP.SHOOTBASIC, BP.DARTTOHIT, BP.DIAGONAL)
         self.gunner_patterns = (BP.MACHINEGUN, BP.DARTWITHFASTFIRE)
+        self.targeting_patterns = (BP.TARGETBASIC,)
         # Switching pattern things
         self.switch_time = False
         self.number_screen_hits = 0
@@ -66,11 +65,12 @@ class Boss(Sprite):
         self.time_start = time.time()
         self.boss_stage = 1
         self.stage_one_weights = {BP.SHOOTBASIC : 30 - self.diff * 5, BP.MACHINEGUN: 15 + self.diff * 5, BP.DIAGONAL: 0, 
-                BP.DARTTOHIT: 30, BP.BEAMATTACK: 10 + self.diff * 5, BP.DARTWITHFASTFIRE: 15 + self.diff * 5}
+                BP.DARTTOHIT: 30, BP.BEAMATTACK: 10 + self.diff * 5, BP.DARTWITHFASTFIRE: 15 + self.diff * 5, 
+                BP.TARGETBASIC: 50 + self.diff * 5}
         self.stage_two_weights = {BP.SHOOTBASIC : 10, BP.MACHINEGUN: 10 + self.diff * 5, BP.DIAGONAL: 10 + self.diff * 10, 
-                BP.DARTTOHIT: 15 + self.diff * 5, BP.BEAMATTACK: 10, BP.DARTWITHFASTFIRE: 10 + self.diff * 5}
+                BP.DARTTOHIT: 15 + self.diff * 5, BP.BEAMATTACK: 10, BP.DARTWITHFASTFIRE: 10 + self.diff * 5, 
+                BP.TARGETBASIC: 50 + self.diff * 10}
         self.stage_weights = (0, self.stage_one_weights, self.stage_two_weights)
-        #print(self.all_patterns.keys())
         self.boss_pattern = random.choices(list(self.all_patterns.keys()), 
                 weights = self.stage_one_weights.values())[0]
     
@@ -86,6 +86,8 @@ class Boss(Sprite):
             self._shoot_bullet()
         elif self.boss_pattern in self.gunner_patterns:
             self._rapid_fire(spacing = self.boss_pattern._value_)
+        elif self.boss_pattern in self.targeting_patterns:
+            self._shoot_bullet(cooldown = 50, homing = True)
         self._move_accordingly(self.boss_pattern)
         self._update_alien_bullets()
         if self.switch_time:
@@ -107,15 +109,15 @@ class Boss(Sprite):
             self.delayed_frames = 0
             self.switch_time = False
             self.available_patterns = self.all_patterns.copy()
-            #del self.available_patterns[self.boss_pattern]
+            specific_weights = self.stage_weights[self.boss_stage].copy()
+            del specific_weights[self.boss_pattern]
+            del self.available_patterns[self.boss_pattern]
             if self.health <= self.max_hp / 2:
                 self.boss_stage = 2
             self.boss_pattern = random.choices(list(self.available_patterns.keys()), 
-                weights = self.stage_weights[self.boss_stage].values())[0]
+                weights = specific_weights.values(), k = 1)[0]
             self.needed_screen_hits = self.available_patterns[self.boss_pattern]
-            self.all_patterns = {BP.SHOOTBASIC: ri(2, 4), BP.MACHINEGUN: ri((5 + self.diff), 9 + self.diff),
-                BP.DIAGONAL: ri(2 + self.diff, 5 + self.diff), BP.DARTTOHIT: ri(1, 5), 
-                BP.BEAMATTACK: ri(4, 7), BP.DARTWITHFASTFIRE: ri(0 + self.diff, 3 + self.diff)}
+            self._reload_random_bouncenumbers()
             self.time_start = time.time()
         self.delayed_frames += 1
 
@@ -128,17 +130,20 @@ class Boss(Sprite):
         elif pattern == BP.BEAMATTACK:
             self._beam_check()
         elif pattern == BP.MACHINEGUN:
-            self._shoot_basic_movement(switch_covered=False)
+            self._shoot_basic_movement(side_dictated=False)
         elif pattern == BP.DIAGONAL:
             self._diagonal_movement()
+        elif pattern == BP.TARGETBASIC:
+            pass
         else:
             print("something's wrong")
 
-    def _shoot_basic_movement(self, switch_covered = True):
-        """Basic side to side movement"""
+    def _shoot_basic_movement(self, side_dictated = True):
+        """Basic side to side movement, side_dictated determines whether pattern switches based on screen
+            hits or something else in the shooting method."""
         self.x += 5.5 * self.xdirection
         self.rect.x = self.x
-        if self.number_screen_hits >= self.needed_screen_hits and switch_covered:
+        if self.number_screen_hits >= self.needed_screen_hits and side_dictated:
             self.number_screen_hits = 0
             self.switch_time = True
         if self._check_screen_edges() == 0:
@@ -268,12 +273,17 @@ class Boss(Sprite):
         elif self.rect.bottom >= self.settings.screen_height or self.rect.top <= 0:
             return(1)
 
-    def _shoot_bullet(self, cooldown = 35):
+    def _shoot_bullet(self, cooldown = 35, homing = False):
         """Shoot an alien_bullet"""
         if self.time_since_shot > cooldown:
             self.time_since_shot = 0
-            new_bullet = AlienBullet(self.horde, self)
+            new_bullet = AlienBullet(self.horde, self, homing)
             self.alien_bullets.add(new_bullet)
+            if homing:
+                self.groups_fired += 1
+                if self.groups_fired >= self.needed_screen_hits:
+                    self.groups_fired = 0
+                    self.switch_time = True
         self.time_since_shot += 1
 
     def _rapid_fire(self, groupnumber = 3, cooldown = 20, spacing = 5):
@@ -292,7 +302,7 @@ class Boss(Sprite):
                 self.groups_fired += 1
                 self.number_bullets = 0
                 self.rapid_fire = False
-        elif not self.rapid_fire:
+        else:
             self.group_space += 1
         if self.groups_fired >= self.needed_screen_hits:
             self.switch_time = True
@@ -329,4 +339,9 @@ class Boss(Sprite):
         if time.time() - self.start_time >= 9.6:
             self.horde.ai_game.general_play = True
             self.time_start = time.time()
-        
+
+    def _reload_random_bouncenumbers(self):
+        self.all_patterns = {BP.SHOOTBASIC: ri(2, 4), BP.MACHINEGUN: ri((5 + self.diff), 9 + self.diff),
+                BP.DIAGONAL: ri(2 + self.diff, 5 + self.diff), BP.DARTTOHIT: ri(1, 5), 
+                BP.BEAMATTACK: ri(4, 5), BP.DARTWITHFASTFIRE: ri(0 + self.diff, 3 + self.diff),
+                BP.TARGETBASIC: ri(4, 6)}
