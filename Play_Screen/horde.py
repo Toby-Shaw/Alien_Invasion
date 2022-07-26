@@ -89,16 +89,18 @@ class Horde:
         """Have one alien shoot at any one time, earlier list address favored"""
         # Runs through every shooter alien address
         if self.alien_pattern in self.rows:
-            # If using rows instead of columns, this will not work
             if (len(self.alien_bullets) <= self.settings.alien_bullets_allowed):
                 for address in self.shooter_alien_addresses:
                     for group in self.four_columns_group:
                         if (self._check_in_front(address, group) and 
-                        self.alien_start_list[address] in group) and self.time_since_shot >= 50:
-                            self.time_since_shot = 0
-                            new_bullet = AlienBullet(self, self.alien_start_list[address])
-                            self.alien_bullets.add(new_bullet)
-        self.time_since_shot += 1
+                        self.alien_start_list[address] in group):
+                            if self.shooter_alien_cooldowns[self.alien_start_list[address]] >= 50:
+                                self.shooter_alien_cooldowns[self.alien_start_list[address]]= 0
+                                new_bullet = AlienBullet(self, self.alien_start_list[address])
+                                self.alien_bullets.add(new_bullet)
+        for address in self.shooter_alien_addresses:
+            self.shooter_alien_cooldowns[self.alien_start_list[address]] += 1
+            #print(self.shooter_alien_cooldowns)
     
     def _update_alien_bullets(self):
         """Update alien bullets and get rid of out of bounds ones."""
@@ -149,6 +151,7 @@ class Horde:
 
         # Create the list of potential shooter aliens/addresses
         self.shooter_alien_addresses = []
+        self.shooter_alien_cooldowns = {}
         self.time_since_shot = 0
 
         # Created here so each new alien in this mode can be appended
@@ -158,6 +161,17 @@ class Horde:
         for row_number in range(number_rows):
             for alien_number in range(self.number_aliens_x):
                 self._create_alien(alien_number, row_number)
+        for x in range(random.randint(self.ai_game.stats.level, self.ai_game.stats.level + 2)):
+            self._convert_normal_to_shooter(AC.RED)
+        if self.ai_game.stats.level > 5:
+            self._convert_normal_to_shooter(AC.PURPLE)
+
+    def _convert_normal_to_shooter(self, color):
+        selected = random.randint(0, self.number_aliens_x*4-1)
+        self.alien_start_list[selected].change_color(color)
+        self.shooters_made += 1
+        self.shooter_alien_addresses.append(selected)
+        self.shooter_alien_cooldowns[self.alien_start_list[selected]] = 0
 
     def _create_alien(self, alien_number, row_number):
         """Create a alien and place it in the row."""
@@ -170,11 +184,12 @@ class Horde:
         alien.rect.x = alien.x
         alien.rect.y = alien_height + 2 * alien.rect.height * row_number
         alien._generate_alien_address(alien_number, row_number)
-        # 1 in 3 aliens are a shooter alien
-        if random.randint(1, self.number_aliens_x * 4) <= (self.ai_game.stats.level * 2) and self.shooters_made <= (self.ai_game.stats.level + 2):
+        """if random.randint(1, self.number_aliens_x * 4) <= (self.ai_game.stats.level * 2) and self.shooters_made <= (self.ai_game.stats.level+1):
             alien.change_color(AC.RED)
             self.shooters_made += 1
             self.shooter_alien_addresses.append(alien_number + row_number * self.number_aliens_x)
+            alien.shot_cooldown = 0
+            self.shooter_alien_cooldowns[alien] = alien.shot_cooldown"""
         if self.alien_pattern in self.rows:
             number_rows = self.alien_pattern._value_[2]
             if alien_number < self.number_aliens_x // number_rows:

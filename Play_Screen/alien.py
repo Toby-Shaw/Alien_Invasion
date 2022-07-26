@@ -15,13 +15,15 @@ class Alien(Sprite):
         self.ap = ai_game.alien_pattern
         self.ai_game = ai_game
         self.color = color
+        self.health = 1
         # Load the alien image and set its rect attribute
         if color == AC.GREEN:
             self.image = pygame.image.load("Games/Alien_Invasion/Images/alien.bmp")
         elif color == AC.RED:
-            self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_red.bmp")
+            self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_red-bg.bmp")
         elif color == AC.PURPLE:
-            self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_purple.bmp")
+            self.health = 3
+            self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_purple-bg.bmp")
         self.rect = self.image.get_rect()
 
         # Start each new alien near the top left of the screen
@@ -88,13 +90,17 @@ class Alien(Sprite):
                 
     def change_color(self, new_color):
         """Change the alien color and retain previous attributes"""
+        self.health = 1
         if new_color == AC.RED:
-            self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_red.bmp")
+            self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_red-bg.bmp")
         elif new_color == AC.GREEN:
             self.image = pygame.image.load("Games/Alien_Invasion/Images/alien.bmp")
         elif new_color == AC.PURPLE:
-            self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_purple.bmp")
+            self.health = 3
+            self.image = pygame.image.load("Games/Alien_Invasion/Images/alien_purple-bg.bmp")
+        self.color = new_color
     
     def _generate_alien_address(self, alien_number, row_number):
+        """Very simple maths, why do I have this"""
         self.alien_address = alien_number + row_number * self.ai_game.number_aliens_x
                     

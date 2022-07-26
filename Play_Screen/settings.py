@@ -35,7 +35,7 @@ class Settings:
         self.alien_bullet_width = 6
         self.alien_bullet_height = 15
         self.alien_bullet_speed = 4.0 * self.initial_modifier
-        self.alien_bullets_allowed = 4
+        self.alien_bullets_allowed = 7
 
         self.initialize_dynamic_settings()
 

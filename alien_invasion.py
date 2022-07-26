@@ -99,7 +99,7 @@ class AlienInvasion:
         self.various_alien_bullet_groups = [self.horde.alien_bullets, self.horde.boss.alien_bullets]
         self.general_play = True
         # Music
-        self.game_sounds = GameSounds(mute = True)
+        self.game_sounds = GameSounds(mute = False)
         # Important for new_level final frames
         self.random_flag = 0
         self.rows = [AP.TWOROWS, AP.THREEROWS, AP.FOURROWS, AP.BASIC]
@@ -251,7 +251,7 @@ class AlienInvasion:
 
     def _check_bullet_alien_collisions(self):
         """Respond to bullet-alien collisions."""
-        self.collided_indexes = []
+        self.destroyed_indexes = []
         self.counter = 0
         if self.alien_pattern in self.rows:
             for index in range(len(self.horde.four_columns_group)):
@@ -259,8 +259,11 @@ class AlienInvasion:
                     self.bullets, self.horde.four_columns_group[index], self.settings.normal_bullet, False)
                 for aliens in self.collisions.values():
                     for alien in aliens:    
-                        self.collided_indexes.append(alien.alien_address)
-                        pygame.sprite.Group.remove(self.horde.four_columns_group[index], alien)
+                        if alien.color == AC.PURPLE and alien.health > 0:
+                            alien.health -= 1
+                        else:
+                            self.destroyed_indexes.append(alien.alien_address)
+                            pygame.sprite.Group.remove(self.horde.four_columns_group[index], alien)
         elif self.alien_pattern == AP.BOSSROOM:
             self.collisions = pygame.sprite.spritecollide(self.horde.boss, self.bullets, True)
             if self.collisions:
@@ -275,7 +278,7 @@ class AlienInvasion:
                     elif self.horde.boss.health < damage: self.horde.boss.health = 0
                     self.horde.boss.healthbar._update_health()
                 for x in self.collisions: self.stats.score += self.settings.alien_points // 4
-        for index in self.collided_indexes:
+        for index in self.destroyed_indexes:
             if index in self.horde.shooter_alien_addresses:
                 self.stats.score += self.settings.alien_points * 2
             else: self.stats.score += self.settings.alien_points
@@ -487,8 +490,8 @@ class AlienInvasion:
 
         # Draw the information screen when appropriate
         elif self.stats.game_layer == GS.INFOSCREEN:
-            self.inf.strong_bullet_info.draw_text()
-            self.inf.shield_info.draw_text()
+            for text in self.inf.all_text:
+                text.draw_text()
 
         elif self.stats.game_layer == GS.ENDSCREEN:
             self.main_menu.draw_button()

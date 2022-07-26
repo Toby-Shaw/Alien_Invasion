@@ -66,10 +66,10 @@ class Boss(Sprite):
         self.boss_stage = 1
         self.stage_one_weights = {BP.SHOOTBASIC : 30 - self.diff * 5, BP.MACHINEGUN: 15 + self.diff * 5, BP.DIAGONAL: 0, 
                 BP.DARTTOHIT: 30, BP.BEAMATTACK: 10 + self.diff * 5, BP.DARTWITHFASTFIRE: 15 + self.diff * 5, 
-                BP.TARGETBASIC: 50 + self.diff * 5}
+                BP.TARGETBASIC: 30 + self.diff * 5}
         self.stage_two_weights = {BP.SHOOTBASIC : 10, BP.MACHINEGUN: 10 + self.diff * 5, BP.DIAGONAL: 10 + self.diff * 10, 
                 BP.DARTTOHIT: 15 + self.diff * 5, BP.BEAMATTACK: 10, BP.DARTWITHFASTFIRE: 10 + self.diff * 5, 
-                BP.TARGETBASIC: 50 + self.diff * 10}
+                BP.TARGETBASIC: 30 + self.diff * 10}
         self.stage_weights = (0, self.stage_one_weights, self.stage_two_weights)
         self.boss_pattern = random.choices(list(self.all_patterns.keys()), 
                 weights = self.stage_one_weights.values())[0]
@@ -286,7 +286,7 @@ class Boss(Sprite):
                     self.switch_time = True
         self.time_since_shot += 1
 
-    def _rapid_fire(self, groupnumber = 3, cooldown = 20, spacing = 5):
+    def _rapid_fire(self, groupnumber = 3, cooldown = 30, spacing = 5):
         """Fire groups of bullets rapidly"""
         if self.group_space >= cooldown or self.rapid_fire:
             self.rapid_fire = True
